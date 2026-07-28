@@ -1,0 +1,91 @@
+/* LoanOutModal.css */
+
+.loan-out-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* ── Jugador ─────────────────────────────── */
+.loan-out-modal__player {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(30, 144, 255, 0.07);
+  border: 1px solid rgba(30, 144, 255, 0.2);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+}
+
+.loan-out-modal__pos {
+  display: inline-block;
+  padding: 0.2rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.loan-out-modal__pos--GK { background: rgba(255, 193, 7, 0.18); color: #ffc107; }
+.loan-out-modal__pos--LB,
+.loan-out-modal__pos--RB,
+.loan-out-modal__pos--CB { background: rgba(30, 144, 255, 0.18); color: #4aaeff; }
+.loan-out-modal__pos--CM,
+.loan-out-modal__pos--CDM,
+.loan-out-modal__pos--CAM,
+.loan-out-modal__pos--LM,
+.loan-out-modal__pos--RM { background: rgba(0, 200, 83, 0.18); color: #00c853; }
+.loan-out-modal__pos--ST,
+.loan-out-modal__pos--RW,
+.loan-out-modal__pos--LW { background: rgba(255, 23, 68, 0.18); color: #ff6b6b; }
+
+.loan-out-modal__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.loan-out-modal__name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.loan-out-modal__sub {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+/* ── Descripción ─────────────────────────── */
+.loan-out-modal__desc {
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+/* ── Estado ──────────────────────────────── */
+.loan-out-modal__status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+}
+
+.loan-out-modal__status strong {
+  font-size: 0.85rem;
+}
+
+.loan-out-modal__status--ok   { color: #00c853; }
+.loan-out-modal__status--loan { color: #ffc107; }
+
+/* ── Footer ──────────────────────────────── */
+.loan-out-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}

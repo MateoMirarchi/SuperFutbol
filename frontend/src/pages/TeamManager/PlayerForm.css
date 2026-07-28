@@ -1,0 +1,37 @@
+/* PlayerForm.css */
+/* Reutiliza las clases de TeamForm.css (tf-*) que ya importa Modal */
+/* Solo override / adici\u00F3n de estilos espec\u00EDficos del formulario de jugador */
+
+.player-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 0.25rem 0;
+}
+
+.pf-team-lock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  padding: 0.65rem 0.75rem;
+  color: var(--color-text-primary);
+}
+
+.pf-team-lock span {
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+}
+
+.pf-input--plain-number::-webkit-outer-spin-button,
+.pf-input--plain-number::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.pf-input--plain-number {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}

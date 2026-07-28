@@ -1,0 +1,44 @@
+/* =====================================================
+   animations.css
+   Keyframes reutilizables en toda la app.
+   ===================================================== */
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+
+@keyframes rotateBall {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(30, 144, 255, 0.3); }
+  50%       { box-shadow: 0 0 30px rgba(30, 144, 255, 0.7); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+/* Clases de utilidad para animar elementos */
+.animate-fade-in       { animation: fadeIn 0.4s ease both; }
+.animate-fade-in-scale { animation: fadeInScale 0.35s ease both; }
+.animate-slide-right   { animation: slideInRight 0.3s ease both; }

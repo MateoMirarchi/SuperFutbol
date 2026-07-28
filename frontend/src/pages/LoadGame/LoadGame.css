@@ -1,0 +1,88 @@
+/* LoadGame.css */
+
+.load-game {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ---- Estado vacío ---- */
+.load-game__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 36px 0;
+  text-align: center;
+}
+
+.load-game__empty-icon {
+  font-size: 3rem;
+}
+
+.load-game__empty p {
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+}
+
+.load-game__empty-hint {
+  color: var(--color-text-muted) !important;
+  font-size: 0.82rem !important;
+}
+
+/* ---- Lista de partidas ---- */
+.load-game__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.save-card {
+  background: var(--color-bg-dark);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  transition: border-color var(--transition-fast);
+}
+
+.save-card:hover {
+  border-color: var(--color-primary);
+}
+
+.save-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.save-card__team {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--color-text-primary);
+}
+
+.save-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  flex-wrap: wrap;
+}
+
+.save-card__date {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.save-card__actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}

@@ -1,0 +1,140 @@
+/* TeamManager.css */
+
+/* ── Contenedor principal ────────────────────────────────────────── */
+.team-manager {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--color-bg-dark);
+  color: var(--color-text-primary);
+  overflow: hidden;
+}
+
+/* ── Cabecera ────────────────────────────────────────────────────── */
+.tm-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem 1.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  flex-shrink: 0;
+  background: rgba(0,0,0,0.2);
+}
+
+.tm-back-btn {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  color: var(--color-text-primary);
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.4rem 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.tm-back-btn:hover { background: rgba(255,255,255,0.14); }
+
+.tm-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin: 0;
+  flex: 1;
+  color: var(--color-text-primary);
+}
+
+.tm-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.tm-saved-notice {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-success, #81c784);
+  animation: fade-out 2s forwards;
+}
+
+@keyframes fade-out {
+  0%   { opacity: 1; }
+  70%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.tm-save-btn {
+  background: var(--color-primary);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.45rem 1rem;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.tm-save-btn:hover { opacity: 0.85; }
+
+/* ── Barra de acciones ───────────────────────────────────────────── */
+.tm-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  flex-shrink: 0;
+}
+
+.tm-db-info {
+  font-size: 0.76rem;
+  color: var(--color-text-muted);
+  margin-left: auto;
+}
+
+.tm-message {
+  padding: 0.75rem 1.5rem;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+
+.tm-message--error {
+  color: var(--color-danger, #ff7b7b);
+}
+
+/* ── Layout de dos columnas ──────────────────────────────────────── */
+.tm-layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  flex: 1;
+  overflow: hidden;
+}
+
+.tm-sidebar {
+  border-right: 1px solid rgba(255,255,255,0.07);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.tm-main {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Responsive: pantallas angostas ──────────────────────────────── */
+@media (max-width: 768px) {
+  .tm-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  .tm-sidebar {
+    border-right: none;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    max-height: 40vh;
+  }
+}

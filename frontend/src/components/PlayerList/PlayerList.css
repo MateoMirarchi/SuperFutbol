@@ -1,0 +1,119 @@
+/* PlayerList.css */
+
+.plist__wrapper {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 100%;
+  border-radius: 10px;
+  border: 1px solid rgba(30, 144, 255, 0.2);
+}
+
+.plist {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+/* ── Encabezado ────────────────────────────────── */
+.plist thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: rgba(10, 20, 45, 0.98);
+}
+
+.plist__th {
+  padding: 0.55rem 0.6rem;
+  text-align: left;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid rgba(30, 144, 255, 0.2);
+  white-space: nowrap;
+}
+
+.plist__th--num,
+.plist__td--num {
+  text-align: center;
+}
+
+.plist__th--status {
+  width: 28px;
+}
+
+/* ── Filas ─────────────────────────────────────── */
+.plist__row {
+  cursor: pointer;
+  transition: background 0.12s;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.plist__row:hover {
+  background: rgba(30, 144, 255, 0.08);
+}
+
+.plist__row--selected {
+  background: rgba(30, 144, 255, 0.14) !important;
+  outline: 1px solid rgba(30, 144, 255, 0.4);
+}
+
+.plist__td {
+  padding: 0.45rem 0.6rem;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+
+.plist__td--name {
+  font-weight: 600;
+  min-width: 130px;
+}
+
+/* ── Posición ──────────────────────────────────── */
+.plist__pos {
+  display: inline-block;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.plist__pos--GK { background: rgba(255, 193, 7, 0.18); color: #ffc107; }
+.plist__pos--LB,
+.plist__pos--RB,
+.plist__pos--CB { background: rgba(30, 144, 255, 0.18); color: #4aaeff; }
+.plist__pos--CM,
+.plist__pos--CDM,
+.plist__pos--CAM,
+.plist__pos--LM,
+.plist__pos--RM { background: rgba(0, 200, 83, 0.18); color: #00c853; }
+.plist__pos--ST,
+.plist__pos--RW,
+.plist__pos--LW { background: rgba(255, 23, 68, 0.18); color: #ff6b6b; }
+
+/* ── Potencia ──────────────────────────────────── */
+.plist__power--elite { color: #00e676; font-weight: 700; }
+.plist__power--good  { color: #69f0ae; }
+.plist__power--mid   { color: #ffc107; }
+.plist__power--low   { color: #ff6d00; }
+
+/* ── Cansancio ─────────────────────────────────── */
+.plist__tired--ok   { color: var(--color-text-secondary); }
+.plist__tired--mid  { color: #ffc107; }
+.plist__tired--high { color: #ff6b6b; font-weight: 700; }
+
+/* ── Estado ────────────────────────────────────── */
+.plist__td--status {
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+/* ── Vacío ─────────────────────────────────────── */
+.plist__empty {
+  padding: 2rem;
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}

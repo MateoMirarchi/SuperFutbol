@@ -1,0 +1,191 @@
+/* NewGame.css */
+
+.new-game {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 40px 16px;
+}
+
+.new-game__container {
+  width: 100%;
+  max-width: 760px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ---- Cabecera ---- */
+.new-game__header {
+  margin-bottom: 32px;
+}
+
+.new-game__back {
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  padding: 0;
+  margin-bottom: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: color var(--transition-fast);
+}
+.new-game__back:hover {
+  color: var(--color-primary);
+}
+
+.new-game__title {
+  font-size: 2rem;
+  margin-bottom: 6px;
+}
+
+.new-game__desc {
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+}
+
+/* ---- Cuerpo ---- */
+.new-game__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+
+/* ---- Secciones ---- */
+.new-game__section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.new-game__section-title {
+  font-size: 1.1rem;
+  color: var(--color-text-primary);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.new-game__section-hint {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+/* ---- Grid de ligas ---- */
+.new-game__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.league-card {
+  background: var(--color-bg-card);
+  border: 2px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    background var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
+  text-align: center;
+  user-select: none;
+}
+
+.league-card:hover {
+  border-color: var(--color-primary);
+  background: var(--color-bg-card-hover);
+  transform: translateY(-2px);
+}
+
+.league-card--selected {
+  border-color: var(--color-primary);
+  background: rgba(30, 144, 255, 0.1);
+  box-shadow: var(--shadow-glow);
+}
+
+.league-card__flag {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.league-card__name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--color-text-primary);
+}
+
+.league-card__country {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+/* ---- Competencias ---- */
+.new-game__competitions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.competition-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--color-bg-card);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  padding: 14px 16px;
+  transition: border-color var(--transition-fast);
+}
+.competition-item:has(.checkbox__input:checked) {
+  border-color: var(--color-primary);
+  background: rgba(30, 144, 255, 0.06);
+}
+
+.competition-item__info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.competition-item__icon {
+  font-size: 1.6rem;
+  flex-shrink: 0;
+}
+
+.competition-item__name {
+  font-size: 0.95rem;
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.competition-item__desc {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+/* ---- Footer ---- */
+.new-game__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid var(--color-border);
+}
+
+.new-game__footer-hint {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  flex: 1;
+}

@@ -1,0 +1,130 @@
+/* StandingsModal.css */
+
+.standings-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* ── Tabs de liga ─────────────────────────────────────────────── */
+.standings-modal__tabs {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.standings-tab {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  padding: 0.4rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.standings-tab--active,
+.standings-tab:hover {
+  background: rgba(30, 144, 255, 0.15);
+  border-color: rgba(30, 144, 255, 0.5);
+  color: var(--primary);
+}
+
+/* ── Leyenda ──────────────────────────────────────────────────── */
+.standings-modal__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.legend-chip {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* ── Divisiones ───────────────────────────────────────────────── */
+.standings-modal__divisions {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ── Tabla de una división ────────────────────────────────────── */
+.div-table__title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  margin: 0 0 0.5rem;
+}
+
+.div-table__scroll {
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.div-table__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.div-table__table thead tr {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.div-table__table th {
+  padding: 0.5rem 0.6rem;
+  text-align: center;
+  color: var(--text-secondary);
+  font-weight: 700;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.div-table__table td {
+  padding: 0.45rem 0.6rem;
+  text-align: center;
+  color: var(--text-primary);
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.div-table__table tbody tr {
+  transition: background 0.1s;
+}
+
+.div-table__table tbody tr:hover {
+  filter: brightness(1.15);
+}
+
+.div-table__pos {
+  color: var(--text-secondary);
+  font-weight: 700;
+  width: 28px;
+}
+
+.div-table__team-col {
+  text-align: left !important;
+  min-width: 140px;
+}
+
+.div-table__team-name {
+  text-align: left !important;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.div-table__pts {
+  font-weight: 800;
+  color: var(--accent);
+}

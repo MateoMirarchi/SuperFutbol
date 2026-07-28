@@ -1,0 +1,161 @@
+/* PlayerSidePanel.css */
+
+.side-panel {
+  background: rgba(13, 26, 54, 0.92);
+  border: 1px solid rgba(30, 144, 255, 0.3);
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* ── Encabezado ──────────────────────────── */
+.side-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.side-panel__name-block {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.side-panel__name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.side-panel__pos {
+  display: inline-block;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.side-panel__pos--GK { background: rgba(255, 193, 7, 0.18); color: #ffc107; }
+.side-panel__pos--LB,
+.side-panel__pos--RB,
+.side-panel__pos--CB { background: rgba(30, 144, 255, 0.18); color: #4aaeff; }
+.side-panel__pos--CM,
+.side-panel__pos--CDM,
+.side-panel__pos--CAM,
+.side-panel__pos--LM,
+.side-panel__pos--RM { background: rgba(0, 200, 83, 0.18); color: #00c853; }
+.side-panel__pos--ST,
+.side-panel__pos--RW,
+.side-panel__pos--LW { background: rgba(255, 23, 68, 0.18); color: #ff6b6b; }
+
+.side-panel__close {
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  transition: background 0.12s, color 0.12s;
+  flex-shrink: 0;
+}
+
+.side-panel__close:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text-primary);
+}
+
+/* ── Stats ───────────────────────────────── */
+.side-panel__stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.side-panel__stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.78rem;
+  padding: 0.2rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.side-panel__stat:last-child {
+  border-bottom: none;
+}
+
+.side-panel__stat-label {
+  color: var(--color-text-secondary);
+}
+
+.side-panel__stat-value {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+/* ── Acciones ────────────────────────────── */
+.side-panel__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.25rem;
+}
+
+.side-panel__btn {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s, border-color 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.side-panel__btn--contract {
+  background: rgba(30, 144, 255, 0.1);
+  border-color: rgba(30, 144, 255, 0.3);
+  color: #4aaeff;
+}
+
+.side-panel__btn--contract:hover {
+  background: rgba(30, 144, 255, 0.2);
+}
+
+.side-panel__btn--sell {
+  background: rgba(0, 200, 83, 0.1);
+  border-color: rgba(0, 200, 83, 0.3);
+  color: #00c853;
+}
+
+.side-panel__btn--sell:hover {
+  background: rgba(0, 200, 83, 0.2);
+}
+
+.side-panel__btn--loan {
+  background: rgba(255, 193, 7, 0.1);
+  border-color: rgba(255, 193, 7, 0.3);
+  color: #ffc107;
+}
+
+.side-panel__btn--loan:hover:not(:disabled) {
+  background: rgba(255, 193, 7, 0.2);
+}
+
+.side-panel__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

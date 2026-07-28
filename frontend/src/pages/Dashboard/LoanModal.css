@@ -1,0 +1,149 @@
+/* LoanModal.css */
+
+.loan-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ── Advertencia de deuda ─────────────────────────────────────── */
+.loan-modal__debt-warning {
+  padding: 0.6rem 0.9rem;
+  background: rgba(251, 146, 60, 0.1);
+  border: 1px solid rgba(251, 146, 60, 0.35);
+  border-radius: 8px;
+  font-size: 0.82rem;
+  color: #fb923c;
+}
+
+/* ── Campos ───────────────────────────────────────────────────── */
+.loan-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.loan-modal__label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
+.loan-modal__amount-display {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+/* ── Slider ───────────────────────────────────────────────────── */
+.loan-modal__slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(30, 144, 255, 0.25);
+  outline: none;
+  cursor: pointer;
+}
+
+.loan-modal__slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--primary);
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(30, 144, 255, 0.6);
+  border: 2px solid #fff;
+}
+
+.loan-modal__slider-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+/* ── Opciones de plazo ────────────────────────────────────────── */
+.loan-modal__terms {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.loan-modal__term-btn {
+  flex: 1;
+  padding: 0.5rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.loan-modal__term-btn--active,
+.loan-modal__term-btn:hover {
+  background: rgba(30, 144, 255, 0.15);
+  border-color: rgba(30, 144, 255, 0.5);
+  color: var(--primary);
+}
+
+/* ── Desglose ─────────────────────────────────────────────────── */
+.loan-modal__breakdown {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.loan-modal__row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.loan-modal__row--total {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 0.5rem;
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.loan-modal__row-val {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.loan-modal__row-val--warn {
+  color: #fb923c;
+}
+
+/* ── Confirmación ─────────────────────────────────────────────── */
+.loan-modal__confirm-text {
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  background: rgba(30, 144, 255, 0.08);
+  border: 1px solid rgba(30, 144, 255, 0.25);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  text-align: center;
+}
+
+/* ── Acciones ─────────────────────────────────────────────────── */
+.loan-modal__actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}

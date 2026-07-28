@@ -1,0 +1,142 @@
+/* CupBracket.css */
+
+/* ── Contenedor principal del bracket ───────────────────────────────────── */
+.cup-bracket {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0;
+  overflow-x: auto;
+  padding: 0.5rem 0 1rem;
+  min-height: 420px;
+}
+
+.bracket-empty {
+  text-align: center;
+  color: var(--color-text-muted);
+  padding: 2rem 1rem;
+  font-size: 0.88rem;
+}
+
+/* ── Columna de una ronda ────────────────────────────────────────────────── */
+.bracket-col {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 160px;
+  max-width: 200px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.bracket-col__name {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-accent, #4fc3f7);
+  text-align: center;
+  padding: 0 0.5rem 0.6rem;
+  white-space: nowrap;
+}
+
+.bracket-col__matches {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0 0.4rem;
+  flex: 1;
+  /* Distribución vertical uniforme para alinear con ronda siguiente */
+  justify-content: space-around;
+}
+
+/* ── Conector entre rondas ───────────────────────────────────────────────── */
+.bracket-col__connector {
+  position: absolute;
+  right: -14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1rem;
+  color: var(--color-text-muted);
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* ── Partido individual ──────────────────────────────────────────────────── */
+.bracket-match {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0.45rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-height: 72px;
+  justify-content: center;
+  transition: border-color 0.15s;
+}
+
+.bracket-match--player {
+  border-color: var(--color-primary);
+  background: rgba(30, 144, 255, 0.1);
+}
+
+.bracket-match--pending {
+  border-style: dashed;
+  border-color: rgba(255, 255, 255, 0.15);
+  background: transparent;
+  min-height: 56px;
+}
+
+.bracket-match__tbd {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  text-align: center;
+  font-style: italic;
+}
+
+.bracket-match__sep {
+  font-size: 0.65rem;
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: 0.05rem 0;
+  letter-spacing: 0.05em;
+}
+
+/* ── Equipo dentro de un partido ─────────────────────────────────────────── */
+.bracket-team {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.2rem;
+  border-radius: 4px;
+}
+
+.bracket-team--winner {
+  background: rgba(76, 175, 80, 0.15);
+}
+
+.bracket-team--winner .bracket-team__name {
+  color: #81c784;
+  font-weight: 700;
+}
+
+.bracket-team__name {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.bracket-team__score {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  min-width: 16px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}

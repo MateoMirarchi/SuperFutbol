@@ -1,0 +1,15 @@
+/* SoccerBall.css */
+
+.soccer-ball {
+  display: inline-block;
+  filter: drop-shadow(0 0 12px rgba(30, 144, 255, 0.5));
+  transition: filter var(--transition-normal);
+}
+
+.soccer-ball--spin {
+  animation: rotateBall 8s linear infinite;
+}
+
+.soccer-ball:hover {
+  filter: drop-shadow(0 0 22px rgba(30, 144, 255, 0.85));
+}

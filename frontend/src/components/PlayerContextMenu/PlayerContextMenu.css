@@ -1,0 +1,69 @@
+/* PlayerContextMenu.css */
+
+.ctx-menu {
+  position: fixed;
+  z-index: 1000;
+  min-width: 200px;
+  background: #111827;
+  border: 1px solid rgba(30, 144, 255, 0.35);
+  border-radius: 10px;
+  padding: 0.35rem 0;
+  list-style: none;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  user-select: none;
+}
+
+/* Nombre del jugador (encabezado) */
+.ctx-menu__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem 0.4rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+
+.ctx-menu__pos {
+  font-size: 0.66rem;
+  font-weight: 700;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  background: rgba(30, 144, 255, 0.15);
+  color: #4aaeff;
+  flex-shrink: 0;
+}
+
+.ctx-menu__divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.07);
+  margin: 0.2rem 0;
+}
+
+/* Ítems del menú */
+.ctx-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.55rem 1rem;
+  background: none;
+  border: none;
+  color: var(--color-text-primary);
+  font-size: 0.83rem;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s;
+  border-radius: 6px;
+}
+
+.ctx-menu__item:hover:not(:disabled) {
+  background: rgba(30, 144, 255, 0.14);
+}
+
+.ctx-menu__item:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

@@ -1,0 +1,58 @@
+/* Select.css */
+
+.select-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.select-wrapper__label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.select-wrapper__field {
+  position: relative;
+}
+
+.select-wrapper__select {
+  width: 100%;
+  padding: 10px 36px 10px 14px;
+  background: var(--color-bg-card);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  color: var(--color-text-primary);
+  font-size: 0.95rem;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+.select-wrapper__select:focus {
+  outline: none;
+  border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.2);
+}
+.select-wrapper__select:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.select-wrapper__select option {
+  background: var(--color-bg-card);
+  color: var(--color-text-primary);
+}
+
+.select-wrapper__arrow {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-muted);
+  pointer-events: none;
+  font-size: 1rem;
+}

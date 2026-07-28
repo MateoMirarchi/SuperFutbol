@@ -1,0 +1,90 @@
+/* ConfidenceBar.css */
+
+.conf-bar {
+  background: rgba(13, 26, 54, 0.8);
+  border: 1px solid rgba(30, 144, 255, 0.25);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.conf-bar__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+.conf-bar__team {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.conf-bar__title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ── Fila de barra ───────────────────────────── */
+.conf-bar__row {
+  display: grid;
+  grid-template-columns: 110px 1fr 42px;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.conf-bar__label {
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.conf-bar__track {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.conf-bar__fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+/* Colores según nivel */
+.conf-bar__fill--critical { background: #ff1744; }
+.conf-bar__fill--low      { background: #ff6d00; }
+.conf-bar__fill--mid      { background: #ffc107; }
+.conf-bar__fill--good     { background: #00c853; }
+.conf-bar__fill--great    { background: #00e676; box-shadow: 0 0 6px rgba(0, 230, 118, 0.5); }
+
+.conf-bar__value {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: right;
+}
+
+.conf-bar__value--critical { color: #ff1744; }
+.conf-bar__value--low      { color: #ff6d00; }
+.conf-bar__value--mid      { color: #ffc107; }
+.conf-bar__value--good     { color: #00c853; }
+.conf-bar__value--great    { color: #00e676; }
+
+/* ── Aviso de expulsión ──────────────────────── */
+.conf-bar__fired-warning {
+  margin-top: 0.4rem;
+  background: rgba(255, 23, 68, 0.12);
+  border: 1px solid rgba(255, 23, 68, 0.4);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #ff6b6b;
+}
