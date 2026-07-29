@@ -20,10 +20,12 @@ const TABLE = 'admins';
  * @returns {object|null}
  */
 async function findByUsuario(usuario) {
+  const normalizedUsuario = usuario.trim().toLowerCase();
+
   const { data, error } = await supabase
     .from(TABLE)
     .select('*')
-    .eq('usuario', usuario)
+    .ilike('usuario', normalizedUsuario)
     .maybeSingle();
 
   if (error) throw error;
@@ -36,10 +38,12 @@ async function findByUsuario(usuario) {
  * @returns {object|null}
  */
 async function findByEmail(email) {
+  const normalizedEmail = email.trim().toLowerCase();
+
   const { data, error } = await supabase
     .from(TABLE)
     .select('*')
-    .eq('email', email)
+    .ilike('email', normalizedEmail)
     .maybeSingle();
 
   if (error) throw error;
