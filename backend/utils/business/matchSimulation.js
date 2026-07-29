@@ -1,8 +1,25 @@
-import { COMPETITIONS } from '../data/competitions';
-import { getActiveParticipant } from './saveState';
+/**
+ * utils/business/matchSimulation.js
+ */
 
-export function idsEqual(a, b) {
+function idsEqual(a, b) {
   return String(a) === String(b);
+}
+
+function getParticipants(save) {
+  return Array.isArray(save?.players) ? save.players : [];
+}
+
+function getActiveParticipant(save) {
+  const participants = getParticipants(save);
+  if (!participants.length) return null;
+
+  if (save?.activeParticipantId) {
+    const active = participants.find((participant) => String(participant.id) === String(save.activeParticipantId));
+    if (active) return active;
+  }
+
+  return participants[0];
 }
 
 function findPlayerMatch(round, teamId) {
@@ -37,7 +54,7 @@ function cupRoundName(shortName) {
   }[shortName] ?? 'Copa Local';
 }
 
-export function findNextMatch(save) {
+function findNextMatch(save) {
   const player = getActiveParticipant(save);
   if (!player?.teamId) return null;
 
@@ -73,9 +90,7 @@ export function findNextMatch(save) {
     if (event.competition === 'cup') {
       const round = save.cupBracket?.rounds?.find((item) => item.shortName.toLowerCase() === event.cupRound);
       const match = round?.matches?.find(
-        (item) =>
-          !item.result &&
-          (idsEqual(item.home?.id, player.teamId) || idsEqual(item.away?.id, player.teamId))
+        (item) => !item.result && (idsEqual(item.home?.id, player.teamId) || idsEqual(item.away?.id, player.teamId))
       );
       if (match) {
         const rival = idsEqual(match.home?.id, player.teamId) ? match.away : match.home;
@@ -100,13 +115,11 @@ export function findNextMatch(save) {
       const match = findPlayerMatch(round, player.teamId);
       if (match && !match.result) {
         const rival = idsEqual(match.home?.id, player.teamId) ? match.away : match.home;
-        const compId = save.config?.selectedCompetitions?.[0] ?? '';
-        const comp = COMPETITIONS.find((item) => item.id === compId);
         return {
           competition: 'continental',
           contRound: event.contRound,
           label: `Fecha ${event.contRound}`,
-          tournamentName: comp?.name ?? 'Copa Continental',
+          tournamentName: 'Copa Continental',
           isHome: idsEqual(match.home?.id, player.teamId),
           rival: rival?.name ?? 'Por definir',
           rivalPrestige: rival?.prestige ?? 70,
@@ -151,15 +164,11 @@ function advanceCupWinners(bracket) {
       if (index === 0) return round;
       return {
         ...round,
-        matches: (round.matches ?? []).map((match) => {
-          const home = winners.get(match.fromA) ?? match.home ?? null;
-          const away = winners.get(match.fromB) ?? match.away ?? null;
-          return {
-            ...match,
-            home,
-            away,
-          };
-        }),
+        matches: (round.matches ?? []).map((match) => ({
+          ...match,
+          home: winners.get(match.fromA) ?? match.home ?? null,
+          away: winners.get(match.fromB) ?? match.away ?? null,
+        })),
       };
     }),
   };
@@ -185,7 +194,7 @@ function buildHistoryEntry(save, nextMatch, simulation) {
   };
 }
 
-export function applySimulationToSave(save, nextMatch, simulation) {
+function applySimulationToSave(save, nextMatch, simulation) {
   const playerTeamId = getActiveParticipant(save)?.teamId;
   const matchPatch = {
     result: {
@@ -252,7 +261,7 @@ export function applySimulationToSave(save, nextMatch, simulation) {
   };
 }
 
-export function buildStandingsTable(teams = [], rounds = []) {
+function buildStandingsTable(teams = [], rounds = []) {
   const map = new Map(
     teams.map((team) => [String(team.id), {
       team,
@@ -315,6 +324,14 @@ export function buildStandingsTable(teams = [], rounds = []) {
     .map((row, index) => ({ ...row, pos: index + 1 }));
 }
 
-export function getLocalDivisionTeams(save) {
+function getLocalDivisionTeams(save) {
   return uniqueTeamsFromRounds(save?.localSchedule ?? []);
 }
+
+module.exports = {
+  idsEqual,
+  findNextMatch,
+  applySimulationToSave,
+  buildStandingsTable,
+  getLocalDivisionTeams,
+};

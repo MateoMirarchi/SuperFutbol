@@ -18,7 +18,10 @@ import useNextMatch from '../../hooks/useNextMatch';
 import { COMPETITIONS } from '../../data/competitions';
 import { getActiveParticipant, updateParticipantCollection } from '../../utils/saveState';
 import { formatMoneyShort, kToMoney } from '../../utils/currency';
-import { evaluateLoanOffer, evaluateSaleOffer } from '../../utils/transferMarket';
+import {
+  evaluateLoanOffer as evaluateLoanOfferApi,
+  evaluateSaleOffer as evaluateSaleOfferApi,
+} from '../../services/api';
 import './Dashboard.css';
 
 function Dashboard({ activeSave, onSave, onSettings, onExit, onMarket, onUpdateSave }) {
@@ -125,10 +128,10 @@ function Dashboard({ activeSave, onSave, onSettings, onExit, onMarket, onUpdateS
   }
 
   /** Vende un jugador: lo elimina de la plantilla y suma el precio al presupuesto. */
-  function handleSellConfirm(player, salePrice) {
+  async function handleSellConfirm(player, salePrice) {
     if (!player1) return;
 
-    const outcome = evaluateSaleOffer({
+    const outcome = await evaluateSaleOfferApi({
       player,
       askingPrice: salePrice,
       sellerTeamId: player1.teamId,
@@ -178,7 +181,7 @@ function Dashboard({ activeSave, onSave, onSettings, onExit, onMarket, onUpdateS
   }
 
   /** Cambia el estado de prestamo del jugador. */
-  function handleLoanConfirm(player, newStatus) {
+  async function handleLoanConfirm(player, newStatus) {
     if (!player1) return null;
 
     if (newStatus === 'available') {
@@ -194,7 +197,7 @@ function Dashboard({ activeSave, onSave, onSettings, onExit, onMarket, onUpdateS
       return { accepted: true, loanTeam: null, returned: true, reason: '' };
     }
 
-    const outcome = evaluateLoanOffer({
+    const outcome = await evaluateLoanOfferApi({
       player,
       ownerTeamId: player1.teamId,
       teamPool: activeSave.teamPool ?? [],
@@ -418,6 +421,7 @@ function Dashboard({ activeSave, onSave, onSettings, onExit, onMarket, onUpdateS
           <ConfidenceBar
             confidence={confidence}
             teamName={player1?.teamName ?? 'Sin club'}
+            expelled={Boolean(player1?.expulsado)}
           />
 
           {/* Panel lateral del jugador seleccionado (click izquierdo) */}

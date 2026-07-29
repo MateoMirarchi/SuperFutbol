@@ -5,18 +5,10 @@
  */
 
 import useLocalStorage from './useLocalStorage';
-import { generateSquad } from '../utils/squadGenerator';
+import { getDefaultConfidence, runSimulation } from '../services/api';
 import { defaultConfidence } from './useConfidence';
 import { LEAGUES } from '../data/leagues';
 import { mapBackendPlayerToSquadPlayer } from '../utils/saveState';
-import { buildLeagueSchedules, findLeagueDivisionSchedule } from '../utils/leagueSimulation';
-import {
-  generateLeagueFixture,
-  generateCupBracket16,
-  generateGroupStageFixtures,
-  buildAnnualCalendar,
-} from '../utils/fixtureGenerator';
-import { generateContinentalGroups } from '../utils/scheduleGenerator';
 
 // Clave bajo la cual se guardan todas las partidas
 export const SAVES_KEY = 'superfutbol_saves';
@@ -42,7 +34,7 @@ function useGameState() {
   * @param {Array|null} initialTeamPlayers - Plantilla real del equipo principal desde la base.
   * @param {object} teamRostersByTeamId - Planteles reales por equipo: { [teamId]: Player[] }
    */
-  function createNewGame(config, players, gameName = 'Mi Partida', allTeams = [], initialTeamPlayers = null, teamRostersByTeamId = {}) {
+  async function createNewGame(config, players, gameName = 'Mi Partida', allTeams = [], initialTeamPlayers = null, teamRostersByTeamId = {}) {
     const normalizedPlayers = players.map((player, index) => ({
       ...player,
       id: player.id ?? `manager_${Date.now()}_${index + 1}`,
@@ -51,12 +43,23 @@ function useGameState() {
 
     const player1         = normalizedPlayers[0];
     const player1Prestige = player1?.prestige ?? 70;
-    const leagueSchedules = buildLeagueSchedules(allTeams, config?.selectedLeagues ?? []);
-    const playerDivisionSchedule = findLeagueDivisionSchedule(
-      leagueSchedules,
-      player1?.leagueId,
-      player1?.divisionLevel
-    );
+    let leagueSchedules = [];
+    let playerDivisionSchedule = null;
+
+    try {
+      leagueSchedules = await runSimulation('buildLeagueSchedules', {
+        teamPool: allTeams,
+        selectedLeagueIds: config?.selectedLeagues ?? [],
+      });
+      playerDivisionSchedule = await runSimulation('findLeagueDivisionSchedule', {
+        leagueSchedules,
+        leagueId: player1?.leagueId,
+        divisionLevel: player1?.divisionLevel,
+      });
+    } catch (_error) {
+      leagueSchedules = [];
+      playerDivisionSchedule = null;
+    }
 
     // ── Generar calendario de la primera temporada ──────────────────────────
 
@@ -72,7 +75,9 @@ function useGameState() {
       const divisionTeams = allTeams.filter(
         (t) => String(t.leagueId) === String(player1?.leagueId) && t.divisionLevel === player1?.divisionLevel
       );
-      localSchedule = divisionTeams.length > 0 ? generateLeagueFixture(divisionTeams) : [];
+      localSchedule = divisionTeams.length > 0
+        ? await runSimulation('generateLeagueFixture', { teams: divisionTeams })
+        : [];
 
       // 2. Copa nacional: reconstruir el objeto liga desde los equipos del backend
       const leagueTeams = allTeams.filter((t) => String(t.leagueId) === String(player1?.leagueId));
@@ -88,14 +93,21 @@ function useGameState() {
             .sort((a, b) => Number(a) - Number(b))
             .map((level) => ({ level: Number(level), teams: divMap[level] })),
         };
-        cupBracket = generateCupBracket16(leagueObj, player1.teamId);
+        cupBracket = await runSimulation('generateCupBracket16', {
+          leagueObj,
+          playerTeamId: player1.teamId,
+        });
       }
     } else {
       // ── Ruta de compatibilidad: partidas cargadas antes de la migración ──
       const league   = LEAGUES.find((l) => l.id === player1?.leagueId);
       const division = league?.divisions?.find((d) => d.level === player1?.divisionLevel);
-      localSchedule  = division ? generateLeagueFixture(division.teams) : [];
-      cupBracket     = league ? generateCupBracket16(league, player1.teamId) : null;
+      localSchedule  = division
+        ? await runSimulation('generateLeagueFixture', { teams: division.teams })
+        : [];
+      cupBracket     = league
+        ? await runSimulation('generateCupBracket16', { leagueObj: league, playerTeamId: player1.teamId })
+        : null;
     }
 
     // 3. Copa continental (si el jugador participa en una)
@@ -112,8 +124,13 @@ function useGameState() {
       const selectedLeagues = config?.selectedLeagues ?? [player1.leagueId];
       // Usa equipos reales si están disponibles, o cae en LEAGUES estático
       const teamsForGroups = allTeams.length > 0 ? allTeams : LEAGUES;
-      const rawGroups      = generateContinentalGroups(teamsForGroups, selectedLeagues, playerTeam);
-      continentalGroups    = generateGroupStageFixtures(rawGroups);
+      const rawGroups = await runSimulation('generateContinentalGroups', {
+        allLeaguesOrTeams: teamsForGroups,
+        leagueIds: selectedLeagues,
+        playerTeam,
+        legacyLeagues: LEAGUES,
+      });
+      continentalGroups = await runSimulation('generateGroupStageFixtures', { groups: rawGroups });
 
       const playerGroup    = continentalGroups.find((g) =>
         g.teams.some((t) => t.id === player1.teamId)
@@ -122,10 +139,21 @@ function useGameState() {
     }
 
     // 4. Calendario anual integrado
-    const annualCalendar = buildAnnualCalendar(localSchedule, continentalGroups, true);
+    const annualCalendar = await runSimulation('buildAnnualCalendar', {
+      localRounds: localSchedule,
+      continentalGroups,
+      hasCup: true,
+    });
     const squad = Array.isArray(initialTeamPlayers)
       ? initialTeamPlayers.map((player) => mapBackendPlayerToSquadPlayer(player, 1)).filter(Boolean)
-      : generateSquad(player1Prestige, 1);
+      : await runSimulation('generateSquad', { prestige: player1Prestige, currentSeason: 1 });
+
+    let initialConfidence = defaultConfidence();
+    try {
+      initialConfidence = await getDefaultConfidence();
+    } catch (_error) {
+      initialConfidence = defaultConfidence();
+    }
 
     const newSave = {
       id: `save_${Date.now()}`,
@@ -154,7 +182,7 @@ function useGameState() {
       // Plantilla de jugadores del equipo del jugador 1
       squad,
       // Confianza de dirigencia y hinchada (0-100)
-      confidence: defaultConfidence(),
+      confidence: initialConfidence,
       // Finanzas globales (préstamos, etc.)
       finances: { loans: [] },
       // Historial

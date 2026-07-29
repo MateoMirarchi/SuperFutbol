@@ -7,13 +7,11 @@ import {
   getMatchesForRound,
 } from '../../utils/leagueSimulation';
 import {
-  createSimulationEnvelope,
-  mergeHalfSimulations,
-  simulateMatchHalf,
   summarizeSimulationAtMinute,
 } from '../../utils/liveMatchSimulation';
 import { buildEffectiveMatchRoster } from '../../utils/tacticalSetup';
-import { getEquipoDetalle } from '../../services/api';
+import { applyConfidenceResult, getEquipoDetalle, runSimulation } from '../../services/api';
+import { updateParticipantCollection } from '../../utils/saveState';
 import MatchPrepModal from './MatchPrepModal';
 import './MatchSimulationScreen.css';
 
@@ -157,7 +155,7 @@ function MatchSimulationScreen({ save, preparation, onApplySave, onExit }) {
 
       if (cancelled) return;
 
-      matchContexts.forEach((matchContext) => {
+      for (const matchContext of matchContexts) {
         const key = buildSimulationKey(matchContext);
         const isPlayerMatch = key === playerMatchKey;
         const homeRoster = resolveTeamRoster(rostersMap, matchContext.match.home);
@@ -166,7 +164,7 @@ function MatchSimulationScreen({ save, preparation, onApplySave, onExit }) {
         const homePlayers = isPlayerMatch && idsEqual(matchContext.match.home?.id, player?.teamId) ? initialRoster : homeRoster;
         const awayPlayers = isPlayerMatch && idsEqual(matchContext.match.away?.id, player?.teamId) ? initialRoster : awayRoster;
 
-        const firstHalf = simulateMatchHalf({
+        const firstHalf = await runSimulation('simulateMatchHalf', {
           homeTeam: matchContext.match.home,
           awayTeam: matchContext.match.away,
           homePlayers,
@@ -177,7 +175,7 @@ function MatchSimulationScreen({ save, preparation, onApplySave, onExit }) {
 
         const secondHalf = isPlayerMatch
           ? null
-          : simulateMatchHalf({
+          : await runSimulation('simulateMatchHalf', {
               homeTeam: matchContext.match.home,
               awayTeam: matchContext.match.away,
               homePlayers: homeRoster,
@@ -187,21 +185,26 @@ function MatchSimulationScreen({ save, preparation, onApplySave, onExit }) {
               isSecondHalf: true,
             });
 
-        const fullResult = mergeHalfSimulations(
+        const fullResult = await runSimulation('mergeHalfSimulations', {
           firstHalf,
-          secondHalf ?? { homeGoals: 0, awayGoals: 0, scorers: [] },
-          matchContext.match.home,
-          matchContext.match.away
-        );
+          secondHalf: secondHalf ?? { homeGoals: 0, awayGoals: 0, scorers: [] },
+          homeTeam: matchContext.match.home,
+          awayTeam: matchContext.match.away,
+        });
+
+        const fullEnvelope = await runSimulation('createSimulationEnvelope', {
+          matchData: matchContext.match,
+          result: fullResult,
+        });
 
         initialSimulations[key] = {
           key,
           context: matchContext,
           firstHalf,
           secondHalf,
-          full: createSimulationEnvelope(matchContext.match, fullResult),
+          full: fullEnvelope,
         };
-      });
+      }
 
       if (cancelled) return;
 
@@ -259,65 +262,101 @@ function MatchSimulationScreen({ save, preparation, onApplySave, onExit }) {
   useEffect(() => {
     if (status !== 'finished' || persistedRef.current) return;
 
-    try {
-      persistedRef.current = true;
+    async function persistResults() {
+      try {
+        persistedRef.current = true;
 
-      let workingSchedules = sourceSchedules;
-      let playerHistoryEntry = null;
-      const historyEntries = [];
+        let workingSchedules = sourceSchedules;
+        let playerHistoryEntry = null;
+        const historyEntries = [];
 
-      matchContexts.forEach((matchContext) => {
-        const simulation = simulations[buildSimulationKey(matchContext)]?.full;
-        if (!simulation) return;
+        matchContexts.forEach((matchContext) => {
+          const simulation = simulations[buildSimulationKey(matchContext)]?.full;
+          if (!simulation) return;
 
-        const matchPatch = {
-          result: {
-            homeGoals: simulation.homeGoals,
-            awayGoals: simulation.awayGoals,
-            homePenalties: simulation.homePenalties ?? null,
-            awayPenalties: simulation.awayPenalties ?? null,
-          },
-          scorers: simulation.scorers ?? [],
-          winner: simulation.winner ?? null,
-          decidedBy: simulation.decidedBy ?? 'regular',
-        };
+          const matchPatch = {
+            result: {
+              homeGoals: simulation.homeGoals,
+              awayGoals: simulation.awayGoals,
+              homePenalties: simulation.homePenalties ?? null,
+              awayPenalties: simulation.awayPenalties ?? null,
+            },
+            scorers: simulation.scorers ?? [],
+            winner: simulation.winner ?? null,
+            decidedBy: simulation.decidedBy ?? 'regular',
+          };
 
-        workingSchedules = applyMatchResultToLeagueSchedules(workingSchedules, {
-          leagueId: matchContext.leagueId,
-          divisionLevel: matchContext.divisionLevel,
-          round: matchContext.round,
-          matchIndex: matchContext.matchIndex,
-          matchPatch,
+          workingSchedules = applyMatchResultToLeagueSchedules(workingSchedules, {
+            leagueId: matchContext.leagueId,
+            divisionLevel: matchContext.divisionLevel,
+            round: matchContext.round,
+            matchIndex: matchContext.matchIndex,
+            matchPatch,
+          });
+
+          const historyEntry = buildHistoryEntry(matchContext, simulation);
+          historyEntries.push(historyEntry);
+
+          if (idsEqual(matchContext.match.home?.id, player?.teamId) || idsEqual(matchContext.match.away?.id, player?.teamId)) {
+            playerHistoryEntry = historyEntry;
+          }
         });
 
-        const historyEntry = buildHistoryEntry(matchContext, simulation);
-        historyEntries.push(historyEntry);
+        const playerDivisionRounds = findLeagueDivisionSchedule(
+          workingSchedules,
+          player?.leagueId,
+          player?.divisionLevel
+        )?.rounds ?? lockedSave.localSchedule ?? [];
 
-        if (idsEqual(matchContext.match.home?.id, player?.teamId) || idsEqual(matchContext.match.away?.id, player?.teamId)) {
-          playerHistoryEntry = historyEntry;
+        let confidencePatch = {};
+        if (playerHistoryEntry?.result && player) {
+          const playerIsHome = idsEqual(playerHistoryEntry.homeTeam?.id, player.teamId);
+          const goalsFor = playerIsHome
+            ? Number(playerHistoryEntry.result.homeGoals ?? 0)
+            : Number(playerHistoryEntry.result.awayGoals ?? 0);
+          const goalsAgainst = playerIsHome
+            ? Number(playerHistoryEntry.result.awayGoals ?? 0)
+            : Number(playerHistoryEntry.result.homeGoals ?? 0);
+          const result = goalsFor > goalsAgainst ? 'win' : goalsFor < goalsAgainst ? 'loss' : 'draw';
+
+          const confidenceResponse = await applyConfidenceResult({
+            confidence: lockedSave.confidence,
+            result,
+            competitionType: 'local',
+            rivalPrestige: idsEqual(playerHistoryEntry.homeTeam?.id, player.teamId)
+              ? playerHistoryEntry.awayTeam?.prestige
+              : playerHistoryEntry.homeTeam?.prestige,
+            myPrestige: player.prestige ?? 70,
+          });
+
+          confidencePatch = {
+            confidence: confidenceResponse?.confidence ?? lockedSave.confidence,
+            players: updateParticipantCollection(
+              lockedSave.players,
+              player.id,
+              { expulsado: Boolean(confidenceResponse?.expulsado) }
+            ),
+          };
         }
-      });
 
-      const playerDivisionRounds = findLeagueDivisionSchedule(
-        workingSchedules,
-        player?.leagueId,
-        player?.divisionLevel
-      )?.rounds ?? lockedSave.localSchedule ?? [];
-
-      onApplySave({
-        leagueSchedules: workingSchedules,
-        teamRosters: teamRostersById,
-        localSchedule: playerDivisionRounds,
-        matchday: nextUnplayedRound(playerDivisionRounds) ?? (roundNumber + 1),
-        matchesPlayed: Number(lockedSave.matchesPlayed ?? 0) + historyEntries.length,
-        results: [...(lockedSave.results ?? []), ...historyEntries],
-        lastMatchResult: playerHistoryEntry ?? historyEntries.at(-1) ?? lockedSave.lastMatchResult,
-        matchPreparation: currentPreparation,
-      });
-    } catch (simulationError) {
-      setError(simulationError.message || 'No se pudo cerrar la jornada.');
-      setStatus('error');
+        onApplySave({
+          leagueSchedules: workingSchedules,
+          teamRosters: teamRostersById,
+          localSchedule: playerDivisionRounds,
+          matchday: nextUnplayedRound(playerDivisionRounds) ?? (roundNumber + 1),
+          matchesPlayed: Number(lockedSave.matchesPlayed ?? 0) + historyEntries.length,
+          results: [...(lockedSave.results ?? []), ...historyEntries],
+          lastMatchResult: playerHistoryEntry ?? historyEntries.at(-1) ?? lockedSave.lastMatchResult,
+          matchPreparation: currentPreparation,
+          ...confidencePatch,
+        });
+      } catch (simulationError) {
+        setError(simulationError.message || 'No se pudo cerrar la jornada.');
+        setStatus('error');
+      }
     }
+
+    persistResults();
   }, [currentPreparation, lockedSave.lastMatchResult, lockedSave.localSchedule, lockedSave.matchesPlayed, lockedSave.results, matchContexts, onApplySave, player?.divisionLevel, player?.leagueId, player?.teamId, roundNumber, simulations, sourceSchedules, status, teamRostersById]);
 
   const roundView = useMemo(() => {
@@ -363,7 +402,7 @@ function MatchSimulationScreen({ save, preparation, onApplySave, onExit }) {
     [matchContexts, minute, simulations]
   );
 
-  function handleHalftimeConfirm(nextPreparation) {
+  async function handleHalftimeConfirm(nextPreparation) {
     const effectivePreparation = nextPreparation ?? currentPreparation;
     setCurrentPreparation(effectivePreparation);
     setShowHalftimeModal(false);
@@ -374,16 +413,21 @@ function MatchSimulationScreen({ save, preparation, onApplySave, onExit }) {
       return;
     }
 
-    setSimulations((current) => {
-      const matchState = current[playerMatchKey];
-      if (!matchState) return current;
+    const matchState = simulations[playerMatchKey];
+    if (!matchState) {
+      setMinute(46);
+      setStatus('second-half');
+      return;
+    }
 
+    try {
       const secondHalfRoster = buildEffectiveMatchRoster(effectivePreparation, lockedSave.squad ?? []);
       const homeTeam = matchState.context.match.home;
       const awayTeam = matchState.context.match.away;
       const homeRoster = resolveTeamRoster(teamRostersById, homeTeam);
       const awayRoster = resolveTeamRoster(teamRostersById, awayTeam);
-      const secondHalf = simulateMatchHalf({
+
+      const secondHalf = await runSimulation('simulateMatchHalf', {
         homeTeam,
         awayTeam,
         homePlayers: idsEqual(homeTeam?.id, player?.teamId) ? secondHalfRoster : homeRoster,
@@ -393,26 +437,33 @@ function MatchSimulationScreen({ save, preparation, onApplySave, onExit }) {
         isSecondHalf: true,
       });
 
-      return {
+      const mergedResult = await runSimulation('mergeHalfSimulations', {
+        firstHalf: matchState.firstHalf,
+        secondHalf,
+        homeTeam,
+        awayTeam,
+      });
+
+      const fullEnvelope = await runSimulation('createSimulationEnvelope', {
+        matchData: matchState.context.match,
+        result: mergedResult,
+      });
+
+      setSimulations((current) => ({
         ...current,
         [playerMatchKey]: {
-          ...matchState,
+          ...current[playerMatchKey],
           secondHalf,
-          full: createSimulationEnvelope(
-            matchState.context.match,
-            mergeHalfSimulations(
-              matchState.firstHalf,
-              secondHalf,
-              matchState.context.match.home,
-              matchState.context.match.away
-            )
-          ),
+          full: fullEnvelope,
         },
-      };
-    });
+      }));
 
-    setMinute(46);
-    setStatus('second-half');
+      setMinute(46);
+      setStatus('second-half');
+    } catch (simulationError) {
+      setError(simulationError.message || 'No se pudo iniciar el segundo tiempo.');
+      setStatus('error');
+    }
   }
 
   return (

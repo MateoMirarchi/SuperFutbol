@@ -71,7 +71,7 @@ function App() {
     const initialTeamPlayers = Array.isArray(teamRosters[playerTeamId]) ? teamRosters[playerTeamId] : [];
 
     // allTeams: array plano de equipos del backend, usado por useGameState para generar el calendario
-    createNewGame(pendingConfig, players, gameName, allTeams, initialTeamPlayers, teamRosters);
+    await createNewGame(pendingConfig, players, gameName, allTeams, initialTeamPlayers, teamRosters);
     setView('dashboard');
   }
 

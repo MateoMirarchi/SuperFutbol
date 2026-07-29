@@ -18,13 +18,7 @@
  */
 
 import { LEAGUES } from '../data/leagues';
-import {
-  generateLeagueFixture,
-  generateCupBracket16,
-  generateGroupStageFixtures,
-  buildAnnualCalendar,
-} from '../utils/fixtureGenerator';
-import { generateContinentalGroups } from '../utils/scheduleGenerator';
+import { runSimulation } from '../services/api';
 import { getActiveParticipant } from '../utils/saveState';
 
 /**
@@ -48,7 +42,7 @@ function useSchedule(activeSave, onUpdateSave) {
    *   3. Copa continental     → fase de grupos (si el jugador participa)
    *   4. Calendario anual     → distribución intercalada de las tres competencias
    */
-  function generateSeasonSchedule() {
+  async function generateSeasonSchedule() {
     if (!activeSave) return;
 
     const player1  = getActiveParticipant(activeSave);
@@ -62,7 +56,9 @@ function useSchedule(activeSave, onUpdateSave) {
       const divisionTeams = teamPool.filter(
         (team) => String(team.leagueId) === String(leagueId) && team.divisionLevel === divLevel
       );
-      const localSchedule = divisionTeams.length > 0 ? generateLeagueFixture(divisionTeams) : [];
+      const localSchedule = divisionTeams.length > 0
+        ? await runSimulation('generateLeagueFixture', { teams: divisionTeams })
+        : [];
 
       const leagueTeams = teamPool.filter((team) => String(team.leagueId) === String(leagueId));
       const divMap = {};
@@ -72,12 +68,15 @@ function useSchedule(activeSave, onUpdateSave) {
       }
 
       const cupBracket = leagueTeams.length > 0
-        ? generateCupBracket16({
-            id: leagueId,
-            divisions: Object.keys(divMap)
-              .sort((a, b) => Number(a) - Number(b))
-              .map((level) => ({ level: Number(level), teams: divMap[level] })),
-          }, player1.teamId)
+        ? await runSimulation('generateCupBracket16', {
+            leagueObj: {
+              id: leagueId,
+              divisions: Object.keys(divMap)
+                .sort((a, b) => Number(a) - Number(b))
+                .map((level) => ({ level: Number(level), teams: divMap[level] })),
+            },
+            playerTeamId: player1.teamId,
+          })
         : null;
 
       const selectedCompetitions = activeSave.config?.selectedCompetitions ?? [];
@@ -94,15 +93,24 @@ function useSchedule(activeSave, onUpdateSave) {
           prestige: player1.prestige ?? 70,
         };
         const selectedLeagues = activeSave.config?.selectedLeagues ?? [leagueId];
-        const rawGroups = generateContinentalGroups(teamPool, selectedLeagues, playerTeam);
-        continentalGroups = generateGroupStageFixtures(rawGroups);
+        const rawGroups = await runSimulation('generateContinentalGroups', {
+          allLeaguesOrTeams: teamPool,
+          leagueIds: selectedLeagues,
+          playerTeam,
+          legacyLeagues: LEAGUES,
+        });
+        continentalGroups = await runSimulation('generateGroupStageFixtures', { groups: rawGroups });
         const playerGroup = continentalGroups.find((group) =>
           group.teams.some((team) => String(team.id) === String(player1.teamId))
         );
         continentalSchedule = playerGroup?.rounds ?? null;
       }
 
-      const annualCalendar = buildAnnualCalendar(localSchedule, continentalGroups, true);
+      const annualCalendar = await runSimulation('buildAnnualCalendar', {
+        localRounds: localSchedule,
+        continentalGroups,
+        hasCup: true,
+      });
 
       onUpdateSave({
         localSchedule,
@@ -123,10 +131,13 @@ function useSchedule(activeSave, onUpdateSave) {
     if (!division) return;
 
     // ── 1. Torneo local ──────────────────────────────────────────────────────
-    const localSchedule = generateLeagueFixture(division.teams);
+    const localSchedule = await runSimulation('generateLeagueFixture', { teams: division.teams });
 
     // ── 2. Copa nacional ─────────────────────────────────────────────────────
-    const cupBracket = generateCupBracket16(league, player1.teamId);
+    const cupBracket = await runSimulation('generateCupBracket16', {
+      leagueObj: league,
+      playerTeamId: player1.teamId,
+    });
 
     // ── 3. Copa continental ──────────────────────────────────────────────────
     const selectedCompetitions = activeSave.config?.selectedCompetitions ?? [];
@@ -145,8 +156,13 @@ function useSchedule(activeSave, onUpdateSave) {
       const selectedLeagues = activeSave.config?.selectedLeagues ?? [leagueId];
 
       // Generar los 4 grupos con sus respectivos calendarios
-      const rawGroups = generateContinentalGroups(LEAGUES, selectedLeagues, playerTeam);
-      continentalGroups = generateGroupStageFixtures(rawGroups);
+      const rawGroups = await runSimulation('generateContinentalGroups', {
+        allLeaguesOrTeams: LEAGUES,
+        leagueIds: selectedLeagues,
+        playerTeam,
+        legacyLeagues: LEAGUES,
+      });
+      continentalGroups = await runSimulation('generateGroupStageFixtures', { groups: rawGroups });
 
       // Extraer solo el grupo del jugador para búsquedas rápidas en useNextMatch
       const playerGroup = continentalGroups.find((g) =>
@@ -156,11 +172,11 @@ function useSchedule(activeSave, onUpdateSave) {
     }
 
     // ── 4. Calendario anual integrado ────────────────────────────────────────
-    const annualCalendar = buildAnnualCalendar(
-      localSchedule,
+    const annualCalendar = await runSimulation('buildAnnualCalendar', {
+      localRounds: localSchedule,
       continentalGroups,
-      true // siempre tiene copa nacional
-    );
+      hasCup: true,
+    });
 
     onUpdateSave({
       localSchedule,

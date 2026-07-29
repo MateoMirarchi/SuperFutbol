@@ -35,8 +35,8 @@ function LoanOutModal({ isOpen, player, onClose, onConfirm }) {
     ? 'El jugador volverá a estar disponible para el equipo.'
     : 'El jugador quedará disponible para ser solicitado en préstamo por otros clubes.';
 
-  function handleConfirm() {
-    const outcome = onConfirm(player, newStatus);
+  async function handleConfirm() {
+    const outcome = await onConfirm(player, newStatus);
 
     if (outcome?.accepted) {
       if (outcome.returned) {

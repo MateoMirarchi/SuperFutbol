@@ -7,8 +7,10 @@
  * Consumido por: pages/Dashboard/Dashboard.jsx
  */
 
+import { useEffect, useState } from 'react';
 import { COMPETITIONS } from '../data/competitions';
-import { findNextMatch } from '../utils/matchSimulation';
+import { runSimulation } from '../services/api';
+import { findNextMatch as findNextMatchLocal } from '../utils/matchSimulation';
 import { getActiveParticipant } from '../utils/saveState';
 
 /**
@@ -24,10 +26,47 @@ import { getActiveParticipant } from '../utils/saveState';
  * } | null}
  */
 function useNextMatch(activeSave) {
+  const [nextMatch, setNextMatch] = useState(null);
   const player1 = getActiveParticipant(activeSave);
+
+  function buildSaveSnapshot(save) {
+    return {
+      activeParticipantId: save?.activeParticipantId ?? null,
+      players: save?.players ?? [],
+      annualCalendar: save?.annualCalendar ?? [],
+      localSchedule: save?.localSchedule ?? [],
+      cupBracket: save?.cupBracket ?? null,
+      continentalGroups: save?.continentalGroups ?? [],
+    };
+  }
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!player1?.teamId) {
+      setNextMatch(null);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    async function fetchNextMatch() {
+      try {
+        const response = await runSimulation('findNextMatch', { save: buildSaveSnapshot(activeSave) });
+        if (!cancelled) setNextMatch(response ?? null);
+      } catch (_error) {
+        if (!cancelled) setNextMatch(findNextMatchLocal(activeSave));
+      }
+    }
+
+    fetchNextMatch();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeSave, player1?.teamId]);
+
   if (!player1?.teamId) return null;
 
-  const nextMatch = findNextMatch(activeSave);
   if (!nextMatch) return null;
 
   if (nextMatch.competition === 'local') {

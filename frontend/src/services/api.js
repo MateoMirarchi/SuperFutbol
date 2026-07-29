@@ -105,6 +105,38 @@ export function deleteJugador(id, token) {
   });
 }
 
+export function runSimulation(operation, payload) {
+  return request('/simulacion/run', {
+    method: 'POST',
+    body: JSON.stringify({ operation, payload }),
+  }).then((response) => response.data);
+}
+
+export function evaluateSaleOffer(payload) {
+  return request('/mercado/evaluar-venta', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function evaluateLoanOffer(payload) {
+  return request('/mercado/evaluar-prestamo', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function getDefaultConfidence() {
+  return request('/confianza/default');
+}
+
+export function applyConfidenceResult(payload) {
+  return request('/confianza/aplicar-resultado', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
 // ── Países ────────────────────────────────────────────────────────
 
 /**

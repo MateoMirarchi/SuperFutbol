@@ -52,9 +52,9 @@ function SellModal({ isOpen, player, onClose, onConfirm }) {
     return 'sell-modal__price--low';
   }
 
-  function handleConfirm() {
+  async function handleConfirm() {
     if (salePriceNum <= 0) return;
-    const outcome = onConfirm(player, salePriceNum);
+    const outcome = await onConfirm(player, salePriceNum);
     if (outcome?.accepted) {
       setMarketFeedback(
         outcome.buyerTeam

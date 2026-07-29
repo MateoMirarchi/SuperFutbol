@@ -38,9 +38,8 @@ function SingleBar({ label, value }) {
   );
 }
 
-function ConfidenceBar({ confidence, teamName }) {
+function ConfidenceBar({ confidence, teamName, expelled = false }) {
   const { board = 70, fans = 70 } = confidence ?? {};
-  const fired = board < 10;
 
   return (
     <div className="conf-bar animate-fade-in">
@@ -52,7 +51,7 @@ function ConfidenceBar({ confidence, teamName }) {
       <SingleBar label="👔 Dirigencia" value={board} />
       <SingleBar label="🏟️ Hinchada"   value={fans}  />
 
-      {fired && (
+      {expelled && (
         <div className="conf-bar__fired-warning animate-fade-in">
           ⚠️ ¡La dirigencia perdió la confianza! El DT puede ser expulsado.
         </div>

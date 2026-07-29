@@ -7,13 +7,9 @@
  * Consumido por: pages/Dashboard/Dashboard.jsx
  */
 
-import {
-  clamp,
-  calcLossConfidenceDelta,
-  calcWinConfidenceDelta,
-  shouldFire,
-} from '../utils/confidenceHelpers';
-import { getActiveParticipant } from '../utils/saveState';
+import { shouldFire } from '../utils/confidenceHelpers';
+import { applyConfidenceResult } from '../services/api';
+import { getActiveParticipant, updateParticipantCollection } from '../utils/saveState';
 
 /**
  * Valores de confianza iniciales para una nueva partida.
@@ -46,31 +42,35 @@ function useConfidence(activeSave, onUpdateSave) {
    * @param {number} rivalPrestige - Prestigio del equipo rival (0-100)
    * @returns {{ confidence: object, fired: boolean }}
    */
-  function applyMatchResult(result, competitionType, rivalPrestige) {
+  async function applyMatchResult(result, competitionType, rivalPrestige) {
     const myPrestige = getActiveParticipant(activeSave)?.prestige ?? 70;
-    let delta = { board: 0, fans: 0 };
+    const response = await applyConfidenceResult({
+      confidence,
+      result,
+      competitionType,
+      rivalPrestige,
+      myPrestige,
+    });
 
-    if (result === 'loss') {
-      delta = calcLossConfidenceDelta(competitionType, myPrestige, rivalPrestige);
-    } else if (result === 'win') {
-      delta = calcWinConfidenceDelta(competitionType, myPrestige, rivalPrestige);
-    }
-    // Empate → delta = { board: 0, fans: 0 }
+    const updated = response?.confidence ?? confidence;
+    const expelled = Boolean(response?.expulsado);
+    const activeParticipant = getActiveParticipant(activeSave);
 
-    const newBoard = clamp(confidence.board + delta.board);
-    const newFans  = clamp(confidence.fans  + delta.fans);
-    const updated  = { board: newBoard, fans: newFans };
+    onUpdateSave({
+      confidence: updated,
+      players: activeParticipant
+        ? updateParticipantCollection(activeSave.players, activeParticipant.id, { expulsado: expelled })
+        : activeSave.players,
+    });
 
-    onUpdateSave({ confidence: updated });
-
-    return { confidence: updated, fired: shouldFire(newBoard) };
+    return { confidence: updated, fired: expelled, expulsado: expelled };
   }
 
   return {
     confidence,
     applyMatchResult,
     /** true si la confianza de dirigencia está por debajo de 10 → el DT es expulsado */
-    isFired: shouldFire(confidence.board),
+    isFired: Boolean(getActiveParticipant(activeSave)?.expulsado) || shouldFire(confidence.board),
   };
 }
 
