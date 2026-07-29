@@ -14,7 +14,6 @@ const equiposRoutes   = require('./routes/equipos');
 const jugadoresRoutes = require('./routes/jugadores');
 const authRoutes      = require('./routes/auth');
 const paisesRoutes    = require('./routes/paises');
-const partidosRoutes  = require('./routes/partidos');
 
 const app  = express();
 const PORT = process.env.PORT || 3001;
@@ -35,7 +34,6 @@ app.use('/auth', authRoutes);
 app.use('/equipos', equiposRoutes);
 app.use('/jugadores', jugadoresRoutes);
 app.use('/paises', paisesRoutes);
-app.use('/partidos', partidosRoutes);
 
 // ── Health check ─────────────────────────────────────────────────
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));

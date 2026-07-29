@@ -45,21 +45,33 @@ function App() {
   }
 
   async function handleTeamConfirm(players, gameName, allTeams) {
-    let initialTeamPlayers = null;
+    let teamRosters = {};
 
     try {
-      const teamId = players[0]?.teamId;
-      if (teamId) {
-        const detail = await getEquipoDetalle(teamId);
-        initialTeamPlayers = Array.isArray(detail?.players) ? detail.players : [];
-      }
+      const uniqueTeamIds = [...new Set((allTeams ?? []).map((team) => String(team.id)))];
+      const details = await Promise.all(
+        uniqueTeamIds.map(async (teamId) => {
+          try {
+            const detail = await getEquipoDetalle(teamId);
+            return [teamId, Array.isArray(detail?.players) ? detail.players : []];
+          } catch (error) {
+            console.warn(`No se pudo cargar la plantilla del equipo ${teamId}:`, error);
+            return [teamId, []];
+          }
+        })
+      );
+
+      teamRosters = Object.fromEntries(details);
     } catch (error) {
-      console.warn('No se pudo cargar la plantilla real del equipo para iniciar la partida:', error);
-      initialTeamPlayers = [];
+      console.warn('No se pudieron cargar las plantillas reales para iniciar la partida:', error);
+      teamRosters = {};
     }
 
+    const playerTeamId = String(players[0]?.teamId ?? '');
+    const initialTeamPlayers = Array.isArray(teamRosters[playerTeamId]) ? teamRosters[playerTeamId] : [];
+
     // allTeams: array plano de equipos del backend, usado por useGameState para generar el calendario
-    createNewGame(pendingConfig, players, gameName, allTeams, initialTeamPlayers);
+    createNewGame(pendingConfig, players, gameName, allTeams, initialTeamPlayers, teamRosters);
     setView('dashboard');
   }
 

@@ -105,13 +105,6 @@ export function deleteJugador(id, token) {
   });
 }
 
-export function simulatePartido(payload) {
-  return request('/partidos/simular', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-}
-
 // ── Países ────────────────────────────────────────────────────────
 
 /**

@@ -13,6 +13,7 @@ import {
   summarizeSimulationAtMinute,
 } from '../../utils/liveMatchSimulation';
 import { buildEffectiveMatchRoster } from '../../utils/tacticalSetup';
+import { getEquipoDetalle } from '../../services/api';
 import MatchPrepModal from './MatchPrepModal';
 import './MatchSimulationScreen.css';
 
@@ -110,61 +111,117 @@ function MatchSimulationScreen({ save, preparation, onApplySave, onExit }) {
   const [currentPreparation, setCurrentPreparation] = useState(lockedPreparation);
   const [showHalftimeModal, setShowHalftimeModal] = useState(false);
   const [simulations, setSimulations] = useState({});
+  const [teamRostersById, setTeamRostersById] = useState(() => lockedSave.teamRosters ?? {});
   const persistedRef = useRef(false);
 
+  function resolveTeamRoster(rostersMap, team) {
+    const roster = rostersMap[String(team?.id ?? '')];
+    if (!Array.isArray(roster) || roster.length === 0) {
+      throw new Error(`Faltan jugadores reales del equipo ${team?.name ?? team?.id ?? 'desconocido'}.`);
+    }
+    return roster;
+  }
+
   useEffect(() => {
+    let cancelled = false;
+
     persistedRef.current = false;
     setError('');
+    setStatus('booting');
 
-    const initialSimulations = {};
-    const initialRoster = buildEffectiveMatchRoster(lockedPreparation, lockedSave.squad ?? []);
+    async function bootstrapSimulation() {
+      const initialSimulations = {};
+      const initialRoster = buildEffectiveMatchRoster(lockedPreparation, lockedSave.squad ?? []);
+      const rostersMap = { ...(lockedSave.teamRosters ?? {}) };
 
-    matchContexts.forEach((matchContext) => {
-      const key = buildSimulationKey(matchContext);
-      const isPlayerMatch = key === playerMatchKey;
-      const homePlayers = isPlayerMatch && idsEqual(matchContext.match.home?.id, player?.teamId) ? initialRoster : undefined;
-      const awayPlayers = isPlayerMatch && idsEqual(matchContext.match.away?.id, player?.teamId) ? initialRoster : undefined;
+      const teamIds = [...new Set(
+        matchContexts
+          .flatMap((matchContext) => [matchContext.match.home?.id, matchContext.match.away?.id])
+          .filter((teamId) => teamId !== undefined && teamId !== null)
+          .map((teamId) => String(teamId))
+      )];
 
-      const firstHalf = simulateMatchHalf({
-        homeTeam: matchContext.match.home,
-        awayTeam: matchContext.match.away,
-        homePlayers,
-        awayPlayers,
-        startMinute: 1,
-        endMinute: 45,
+      const missingTeamIds = teamIds.filter((teamId) => !Array.isArray(rostersMap[teamId]) || rostersMap[teamId].length === 0);
+      if (missingTeamIds.length > 0) {
+        const loadedRosters = await Promise.all(
+          missingTeamIds.map(async (teamId) => {
+            const detail = await getEquipoDetalle(teamId);
+            return [teamId, Array.isArray(detail?.players) ? detail.players : []];
+          })
+        );
+
+        loadedRosters.forEach(([teamId, players]) => {
+          rostersMap[teamId] = players;
+        });
+      }
+
+      if (cancelled) return;
+
+      matchContexts.forEach((matchContext) => {
+        const key = buildSimulationKey(matchContext);
+        const isPlayerMatch = key === playerMatchKey;
+        const homeRoster = resolveTeamRoster(rostersMap, matchContext.match.home);
+        const awayRoster = resolveTeamRoster(rostersMap, matchContext.match.away);
+
+        const homePlayers = isPlayerMatch && idsEqual(matchContext.match.home?.id, player?.teamId) ? initialRoster : homeRoster;
+        const awayPlayers = isPlayerMatch && idsEqual(matchContext.match.away?.id, player?.teamId) ? initialRoster : awayRoster;
+
+        const firstHalf = simulateMatchHalf({
+          homeTeam: matchContext.match.home,
+          awayTeam: matchContext.match.away,
+          homePlayers,
+          awayPlayers,
+          startMinute: 1,
+          endMinute: 45,
+        });
+
+        const secondHalf = isPlayerMatch
+          ? null
+          : simulateMatchHalf({
+              homeTeam: matchContext.match.home,
+              awayTeam: matchContext.match.away,
+              homePlayers: homeRoster,
+              awayPlayers: awayRoster,
+              startMinute: 46,
+              endMinute: 90,
+              isSecondHalf: true,
+            });
+
+        const fullResult = mergeHalfSimulations(
+          firstHalf,
+          secondHalf ?? { homeGoals: 0, awayGoals: 0, scorers: [] },
+          matchContext.match.home,
+          matchContext.match.away
+        );
+
+        initialSimulations[key] = {
+          key,
+          context: matchContext,
+          firstHalf,
+          secondHalf,
+          full: createSimulationEnvelope(matchContext.match, fullResult),
+        };
       });
 
-      const secondHalf = isPlayerMatch
-        ? null
-        : simulateMatchHalf({
-            homeTeam: matchContext.match.home,
-            awayTeam: matchContext.match.away,
-            startMinute: 46,
-            endMinute: 90,
-            isSecondHalf: true,
-          });
+      if (cancelled) return;
 
-      const fullResult = mergeHalfSimulations(
-        firstHalf,
-        secondHalf ?? { homeGoals: 0, awayGoals: 0, scorers: [] },
-        matchContext.match.home,
-        matchContext.match.away
-      );
+      setTeamRostersById(rostersMap);
+      setSimulations(initialSimulations);
+      setMinute(matchContexts.length ? 1 : 0);
+      setShowHalftimeModal(false);
+      setStatus(matchContexts.length ? 'first-half' : 'finished');
+    }
 
-      initialSimulations[key] = {
-        key,
-        context: matchContext,
-        firstHalf,
-        secondHalf,
-        full: createSimulationEnvelope(matchContext.match, fullResult),
-      };
+    bootstrapSimulation().catch((simulationError) => {
+      if (cancelled) return;
+      setError(simulationError.message || 'No se pudo preparar la simulación de la jornada.');
+      setStatus('error');
     });
 
-    setSimulations(initialSimulations);
-    setMinute(matchContexts.length ? 1 : 0);
-    setShowHalftimeModal(false);
-    setStatus(matchContexts.length ? 'first-half' : 'finished');
-  }, [lockedPreparation, lockedSave.squad, matchContexts, player?.teamId, playerMatchKey]);
+    return () => {
+      cancelled = true;
+    };
+  }, [lockedPreparation, lockedSave.squad, lockedSave.teamRosters, matchContexts, player?.teamId, playerMatchKey]);
 
   useEffect(() => {
     if (status !== 'first-half' && status !== 'second-half') return undefined;
@@ -249,6 +306,7 @@ function MatchSimulationScreen({ save, preparation, onApplySave, onExit }) {
 
       onApplySave({
         leagueSchedules: workingSchedules,
+        teamRosters: teamRostersById,
         localSchedule: playerDivisionRounds,
         matchday: nextUnplayedRound(playerDivisionRounds) ?? (roundNumber + 1),
         matchesPlayed: Number(lockedSave.matchesPlayed ?? 0) + historyEntries.length,
@@ -260,7 +318,7 @@ function MatchSimulationScreen({ save, preparation, onApplySave, onExit }) {
       setError(simulationError.message || 'No se pudo cerrar la jornada.');
       setStatus('error');
     }
-  }, [currentPreparation, lockedSave.lastMatchResult, lockedSave.localSchedule, lockedSave.matchesPlayed, lockedSave.results, matchContexts, onApplySave, player?.divisionLevel, player?.leagueId, player?.teamId, roundNumber, simulations, sourceSchedules, status]);
+  }, [currentPreparation, lockedSave.lastMatchResult, lockedSave.localSchedule, lockedSave.matchesPlayed, lockedSave.results, matchContexts, onApplySave, player?.divisionLevel, player?.leagueId, player?.teamId, roundNumber, simulations, sourceSchedules, status, teamRostersById]);
 
   const roundView = useMemo(() => {
     const league = sourceSchedules.find((item) => String(item.id) === String(player?.leagueId));
@@ -321,11 +379,15 @@ function MatchSimulationScreen({ save, preparation, onApplySave, onExit }) {
       if (!matchState) return current;
 
       const secondHalfRoster = buildEffectiveMatchRoster(effectivePreparation, lockedSave.squad ?? []);
+      const homeTeam = matchState.context.match.home;
+      const awayTeam = matchState.context.match.away;
+      const homeRoster = resolveTeamRoster(teamRostersById, homeTeam);
+      const awayRoster = resolveTeamRoster(teamRostersById, awayTeam);
       const secondHalf = simulateMatchHalf({
-        homeTeam: matchState.context.match.home,
-        awayTeam: matchState.context.match.away,
-        homePlayers: idsEqual(matchState.context.match.home?.id, player?.teamId) ? secondHalfRoster : undefined,
-        awayPlayers: idsEqual(matchState.context.match.away?.id, player?.teamId) ? secondHalfRoster : undefined,
+        homeTeam,
+        awayTeam,
+        homePlayers: idsEqual(homeTeam?.id, player?.teamId) ? secondHalfRoster : homeRoster,
+        awayPlayers: idsEqual(awayTeam?.id, player?.teamId) ? secondHalfRoster : awayRoster,
         startMinute: 46,
         endMinute: 90,
         isSecondHalf: true,

@@ -1,7 +1,3 @@
-const POSITION_TEMPLATE = [
-  'GK', 'LB', 'RB', 'CB', 'CB', 'CM', 'CM', 'CAM', 'LW', 'RW', 'ST',
-];
-
 const REGULAR_GOAL_WEIGHTS = {
   GK: 0,
   LB: 0.4,
@@ -17,15 +13,8 @@ const REGULAR_GOAL_WEIGHTS = {
   RW: 3.2,
 };
 
-const FIRST_NAMES = ['Carlos', 'Lucas', 'Matias', 'Diego', 'Gonzalo', 'Nicolas', 'Leandro', 'Agustin'];
-const LAST_NAMES = ['Lopez', 'Diaz', 'Romero', 'Suarez', 'Vega', 'Torres', 'Rojas', 'Herrera'];
-
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
-}
-
-function randomItem(list) {
-  return list[Math.floor(Math.random() * list.length)];
 }
 
 function normalizePosition(position) {
@@ -33,19 +22,10 @@ function normalizePosition(position) {
   return { DEF: 'CB', MID: 'CM', FWD: 'ST' }[normalized] ?? normalized;
 }
 
-function createVirtualRoster(team = {}) {
-  const prestige = Number(team.prestige ?? 65);
-  return POSITION_TEMPLATE.map((position, index) => ({
-    id: `${team.id ?? 'team'}-virt-${index + 1}`,
-    firstName: randomItem(FIRST_NAMES),
-    lastName: randomItem(LAST_NAMES),
-    position,
-    power: clamp(Math.round(prestige * 0.8 + (Math.random() * 14 - 7)), 30, 95),
-  }));
-}
-
 function normalizeRoster(team, players = []) {
-  if (!Array.isArray(players) || !players.length) return createVirtualRoster(team);
+  if (!Array.isArray(players) || !players.length) {
+    throw new Error(`No hay plantel real disponible para ${team?.name ?? 'el equipo'}.`);
+  }
   return players.map((player, index) => ({
     id: player.id ?? `${team?.id ?? 'team'}-pl-${index + 1}`,
     firstName: player.firstName ?? player.nombre ?? 'Jugador',

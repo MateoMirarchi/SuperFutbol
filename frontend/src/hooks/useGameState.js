@@ -39,9 +39,10 @@ function useGameState() {
    * @param {Array}  players   - Jugadores [{ name, teamId, teamName, leagueId, divisionLevel, city, prestige, budget }]
    * @param {string} gameName  - Nombre identificador de la partida
    * @param {Array}  allTeams  - Equipos reales del backend (array plano). Si está vacío, usa datos estáticos.
-   * @param {Array|null} initialTeamPlayers - Plantilla real del equipo principal desde la base.
+  * @param {Array|null} initialTeamPlayers - Plantilla real del equipo principal desde la base.
+  * @param {object} teamRostersByTeamId - Planteles reales por equipo: { [teamId]: Player[] }
    */
-  function createNewGame(config, players, gameName = 'Mi Partida', allTeams = [], initialTeamPlayers = null) {
+  function createNewGame(config, players, gameName = 'Mi Partida', allTeams = [], initialTeamPlayers = null, teamRostersByTeamId = {}) {
     const normalizedPlayers = players.map((player, index) => ({
       ...player,
       id: player.id ?? `manager_${Date.now()}_${index + 1}`,
@@ -138,6 +139,7 @@ function useGameState() {
       players: normalizedPlayers,
       // Snapshot de equipos reales usados para la partida
       teamPool: allTeams,
+      teamRosters: teamRostersByTeamId,
       leagueSchedules,
       // Progreso
       season: 1,
