@@ -73,8 +73,47 @@ function validateJugadorPayload(body) {
   return errors;
 }
 
+function validateVentaPayload(body) {
+  const errors = {};
+  const askingPrice = Number(body.askingPrice);
+
+  if (!body.player || typeof body.player !== 'object') {
+    errors.player = 'El jugador es obligatorio.';
+  } else if (body.player.id === undefined || body.player.id === null || body.player.id === '') {
+    errors.player = 'El jugador debe tener un id.';
+  }
+
+  if (!Number.isFinite(askingPrice) || askingPrice <= 0) {
+    errors.askingPrice = 'El precio pedido debe ser un numero positivo.';
+  }
+
+  if (body.teamPool !== undefined && !Array.isArray(body.teamPool)) {
+    errors.teamPool = 'teamPool debe ser un array.';
+  }
+
+  return errors;
+}
+
+function validatePrestamoPayload(body) {
+  const errors = {};
+
+  if (!body.player || typeof body.player !== 'object') {
+    errors.player = 'El jugador es obligatorio.';
+  } else if (body.player.id === undefined || body.player.id === null || body.player.id === '') {
+    errors.player = 'El jugador debe tener un id.';
+  }
+
+  if (body.teamPool !== undefined && !Array.isArray(body.teamPool)) {
+    errors.teamPool = 'teamPool debe ser un array.';
+  }
+
+  return errors;
+}
+
 module.exports = {
   validateLoginPayload,
   validateEquipoPayload,
   validateJugadorPayload,
+  validateVentaPayload,
+  validatePrestamoPayload,
 };

@@ -18,12 +18,15 @@ function saleAcceptanceChance(priceRatio) {
 
 function evaluateSaleOffer({ player, askingPrice, sellerTeamId, teamPool = [] }) {
   const eligibleTeams = getEligibleTeams(teamPool, sellerTeamId);
-  if (!player || askingPrice <= 0 || !eligibleTeams.length) {
+  const numericAskingPrice = Number(askingPrice);
+  // Number.isFinite(NaN) es false: antes `askingPrice <= 0` con NaN daba
+  // `false` (NaN no es <= ni > nada) y la guarda dejaba pasar precios invalidos.
+  if (!player || !Number.isFinite(numericAskingPrice) || numericAskingPrice <= 0 || !eligibleTeams.length) {
     return { accepted: false, buyerTeam: null, saleAmount: 0, reason: 'No hay clubes interesados disponibles.' };
   }
 
   const marketValue = Math.max(1, Math.round(Number(player.value ?? 0)));
-  const priceRatio = askingPrice / marketValue;
+  const priceRatio = numericAskingPrice / marketValue;
   const accepted = Math.random() <= saleAcceptanceChance(priceRatio);
 
   if (!accepted) {
@@ -41,7 +44,7 @@ function evaluateSaleOffer({ player, askingPrice, sellerTeamId, teamPool = [] })
   return {
     accepted: true,
     buyerTeam,
-    saleAmount: Math.round(askingPrice),
+    saleAmount: Math.round(numericAskingPrice),
     reason: '',
   };
 }
