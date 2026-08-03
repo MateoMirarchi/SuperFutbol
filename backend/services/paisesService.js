@@ -52,33 +52,26 @@ async function findByNombre(nombre) {
 
 /**
  * Crea un país e inserta automáticamente sus 4 divisiones.
+ * Ambos INSERT ocurren dentro de una unica transaccion de Postgres (funcion
+ * crear_pais_con_divisiones, ver sql/migrations/001_crear_pais_con_divisiones.sql):
+ * si falla la insercion de las divisiones, el pais tampoco queda persistido
+ * (antes eran dos INSERT sueltos desde Node sin ninguna transaccion, y un
+ * pais podia quedar huerfano sin sus 4 divisiones).
+ *
+ * Requiere que la migracion 001 este aplicada en Supabase antes de desplegar
+ * este cambio -- si la funcion no existe todavia, esta llamada falla con un
+ * error de Postgres ("function crear_pais_con_divisiones does not exist").
+ *
  * @param {string} nombre - Nombre del país
  * @returns {{ id, nombre, divisiones: Array }}
  */
 async function create(nombre) {
-  // 1. Insertar el país
-  const { data: pais, error: paisError } = await supabase
-    .from(PAISES_TABLE)
-    .insert([{ nombre: nombre.trim() }])
-    .select()
-    .single();
+  const { data, error } = await supabase.rpc('crear_pais_con_divisiones', {
+    p_nombre: nombre.trim(),
+  });
 
-  if (paisError) throw paisError;
-
-  // 2. Insertar las 4 divisiones asociadas
-  const filas = [1, 2, 3, 4].map((n) => ({
-    nombre:  `División ${n}`,
-    pais_id: pais.id,
-  }));
-
-  const { data: divisiones, error: divError } = await supabase
-    .from(DIVISIONES_TABLE)
-    .insert(filas)
-    .select();
-
-  if (divError) throw divError;
-
-  return { ...pais, divisiones };
+  if (error) throw error;
+  return data;
 }
 
 module.exports = { getAll, findByNombre, create };

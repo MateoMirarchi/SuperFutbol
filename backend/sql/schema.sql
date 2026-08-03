@@ -41,3 +41,36 @@ create table if not exists jugadores (
 
 create index if not exists idx_jugadores_equipo_id on jugadores(equipo_id);
 create index if not exists idx_equipos_liga_division on equipos(liga_id, division);
+
+-- ─────────────────────────────────────────────────────────────────────────
+-- paises / divisiones
+--
+-- Estas dos tablas ya las usa el codigo (services/paisesService.js) pero no
+-- estaban definidas en este archivo -- el schema entregado no reflejaba el
+-- sistema en produccion. Se agregan aqui con la misma estructura de columnas
+-- que el codigo ya asume (nombre, pais_id), sumando las constraints que
+-- faltaban: UNIQUE en paises.nombre (sin esto, dos POST /paises concurrentes
+-- con el mismo nombre nuevo podian crear paises duplicados: el codigo
+-- verifica duplicados con un SELECT previo, pero sin UNIQUE en la base eso
+-- es una simple carrera, no una garantia) y UNIQUE(pais_id, nombre) en
+-- divisiones para que no se puedan insertar divisiones repetidas del mismo
+-- pais.
+--
+-- IMPORTANTE: no se corrio esta migracion contra Supabase. Revisar y
+-- ejecutar manualmente -- puede haber datos reales en la base.
+-- ─────────────────────────────────────────────────────────────────────────
+
+create table if not exists paises (
+  id serial primary key,
+  nombre varchar(100) unique not null,
+  created_at timestamptz default now()
+);
+
+create table if not exists divisiones (
+  id serial primary key,
+  pais_id integer not null references paises(id) on delete cascade,
+  nombre varchar(100) not null,
+  unique (pais_id, nombre)
+);
+
+create index if not exists idx_divisiones_pais_id on divisiones(pais_id);
