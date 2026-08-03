@@ -29,14 +29,50 @@
  */
 
 import { useState, useCallback } from 'react';
-import { DB_KEY, seedDatabase } from '../utils/teamDbUtils';
+import { DB_KEY, DB_VERSION, seedDatabase } from '../utils/teamDbUtils';
 import { loadData, saveData } from '../utils/storage';
 
 // ── Helpers de persistencia ──────────────────────────────────────────────
 
+// Migraciones por version de origen: DB_MIGRATIONS[1] transforma una DB v1
+// en v2, etc. Vacio por ahora (DB_VERSION nunca subio de 1); es el lugar
+// donde agregar el paso de transformacion el dia que cambie la forma de la DB.
+const DB_MIGRATIONS = {};
+
+function migrateDb(db) {
+  let current = db;
+  while (current.version < DB_VERSION) {
+    const migrate = DB_MIGRATIONS[current.version];
+    if (!migrate) {
+      console.warn(
+        `useTeamDatabase: no hay migracion definida de la version ${current.version} a ${current.version + 1}; se conserva el dato tal cual y solo se actualiza el numero de version.`
+      );
+      current = { ...current, version: current.version + 1 };
+      continue;
+    }
+    current = migrate(current);
+  }
+  return current;
+}
+
 function loadDb() {
   const parsed = loadData(DB_KEY, null);
-  if (parsed?.teams) return parsed;
+  if (parsed?.teams) {
+    const version = Number(parsed.version ?? 0);
+    if (version === DB_VERSION) return parsed;
+
+    if (version > DB_VERSION) {
+      console.warn(
+        `useTeamDatabase: la base de equipos guardada (v${version}) es mas nueva que la version soportada por esta build (v${DB_VERSION}). Se usa tal cual; podrian aparecer inconsistencias.`
+      );
+      return parsed;
+    }
+
+    console.warn(`useTeamDatabase: migrando base de equipos de v${version} a v${DB_VERSION}.`);
+    const migrated = migrateDb({ ...parsed, version });
+    saveData(DB_KEY, migrated);
+    return migrated;
+  }
 
   const fresh = seedDatabase();
   saveData(DB_KEY, fresh);

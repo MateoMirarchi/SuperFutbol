@@ -14,6 +14,12 @@ import { mapBackendPlayerToSquadPlayer } from '../utils/saveState';
 export const SAVES_KEY = 'superfutbol_saves';
 // Clave de la partida actualmente cargada
 export const ACTIVE_SAVE_KEY = 'superfutbol_active_save';
+// Version del esquema de un save. Las partidas guardadas antes de este
+// cambio no tienen este campo (quedan como `undefined`, tratar como v1
+// para compatibilidad). Subir este numero y sumar una migracion en
+// useGameState (mismo patron que DB_MIGRATIONS en useTeamDatabase.js) el
+// dia que cambie la forma de newSave() de manera incompatible.
+export const SAVE_VERSION = 1;
 
 /**
  * Retorna las herramientas para gestionar partidas guardadas.
@@ -157,6 +163,7 @@ function useGameState() {
 
     const newSave = {
       id: `save_${Date.now()}`,
+      version: SAVE_VERSION,
       name: gameName,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
