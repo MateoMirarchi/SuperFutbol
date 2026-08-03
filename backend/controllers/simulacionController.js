@@ -39,6 +39,22 @@ const operationMap = {
   createSimulationEnvelope: ({ matchData, result }) => live.createSimulationEnvelope(matchData, result),
 
   findNextMatch: ({ save }) => match.findNextMatch(save),
+  // TODO(seguridad/integridad): applySimulationToSave persiste el resultado
+  // de partido (`simulation`) tal cual lo manda el cliente, sin volver a
+  // ejecutar simularPartido/simulateMatchHalf+mergeHalfSimulations server-side
+  // para verificarlo. Esto es una decision pendiente, no un olvido: hoy no
+  // existe ningun estado de partida (save) persistido server-side -- el save
+  // completo vive en localStorage del cliente (ver frontend/src/hooks/
+  // useGameState.js) y este endpoint no tiene con que contrastar el
+  // resultado recibido. Resolverlo de raiz implica decidir donde vive el
+  // estado autoritativo de una partida (mover el save a la base, o al menos
+  // que el servidor guarde el ultimo seed/parametros usados por partido para
+  // poder re-simular y comparar) antes de poder rechazar un resultado
+  // adulterado. Mismo problema de fondo que motivo el fix de
+  // mercadoController.js (ver commit "validar payload y recalcular valor/
+  // potencia server-side en mercado"), pero ahi si existe una fuente de
+  // verdad parcial (tabla `jugadores`) para los jugadores del catalogo real;
+  // aqui no hay ninguna tabla de "partidas en curso" contra la cual validar.
   applySimulationToSave: ({ save, nextMatch, simulation }) => match.applySimulationToSave(save, nextMatch, simulation),
   buildStandingsTable: ({ teams, rounds }) => match.buildStandingsTable(teams, rounds),
   getLocalDivisionTeams: ({ save }) => match.getLocalDivisionTeams(save),
