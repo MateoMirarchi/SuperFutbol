@@ -33,8 +33,8 @@ const operationMap = {
   generateCupBracket: ({ teams }) => schedule.generateCupBracket(teams),
 
   simulateMatchHalf: (payload) => live.simulateMatchHalf(payload),
-  mergeHalfSimulations: ({ firstHalf, secondHalf, homeTeam, awayTeam }) =>
-    live.mergeHalfSimulations(firstHalf, secondHalf, homeTeam, awayTeam),
+  mergeHalfSimulations: ({ firstHalf, secondHalf, homeTeam, awayTeam, homePlayers, awayPlayers, isKnockout }) =>
+    live.mergeHalfSimulations(firstHalf, secondHalf, homeTeam, awayTeam, { homePlayers, awayPlayers, isKnockout }),
   summarizeSimulationAtMinute: ({ simulation, minute }) => live.summarizeSimulationAtMinute(simulation, minute),
   createSimulationEnvelope: ({ matchData, result }) => live.createSimulationEnvelope(matchData, result),
 
