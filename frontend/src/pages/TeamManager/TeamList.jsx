@@ -23,6 +23,7 @@
  * Separaci\u00F3n: components/ \u2192 presentaci\u00F3n pura, sin l\u00F3gica de negocio.
  */
 
+import { useMemo } from 'react';
 import { LEAGUES } from '../../data/leagues';
 import { filterTeams } from '../../utils/teamDbUtils';
 import './TeamList.css';
@@ -39,7 +40,10 @@ function TeamList({
   onLeagueChange,
   onDivChange,
 }) {
-  const visible = filterTeams(teams, search, leagueFilter || null, divFilter || null);
+  const visible = useMemo(
+    () => filterTeams(teams, search, leagueFilter || null, divFilter || null),
+    [teams, search, leagueFilter, divFilter]
+  );
 
   function playerCount(teamId) {
     return players.filter((p) => p.teamId === teamId).length;
