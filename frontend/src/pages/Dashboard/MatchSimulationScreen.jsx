@@ -6,9 +6,7 @@ import {
   findLeagueDivisionSchedule,
   getMatchesForRound,
 } from '../../utils/leagueSimulation';
-import {
-  summarizeSimulationAtMinute,
-} from '../../utils/liveMatchSimulation';
+import { idsEqual, summarizeSimulationAtMinute } from '../../utils/matchSimulation';
 import { buildEffectiveMatchRoster } from '../../utils/tacticalSetup';
 import { getEquipoDetalle, runSimulation } from '../../services/api';
 import { computeConfidencePatch } from '../../hooks/useConfidence';
@@ -16,10 +14,6 @@ import MatchPrepModal from './MatchPrepModal';
 import './MatchSimulationScreen.css';
 
 const TICK_MS = 110;
-
-function idsEqual(a, b) {
-  return String(a) === String(b);
-}
 
 function buildSimulationKey(matchContext) {
   return `${matchContext.leagueId}_${matchContext.divisionLevel}_${matchContext.round}_${matchContext.matchIndex}`;

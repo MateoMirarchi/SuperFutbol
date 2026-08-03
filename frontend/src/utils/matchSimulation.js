@@ -318,3 +318,20 @@ export function buildStandingsTable(teams = [], rounds = []) {
 export function getLocalDivisionTeams(save) {
   return uniqueTeamsFromRounds(save?.localSchedule ?? []);
 }
+
+export function summarizeSimulationAtMinute(simulation, minute) {
+  const scorers = (simulation?.scorers ?? []).filter((goal) => Number(goal.minute) <= Number(minute));
+  let homeGoals = 0;
+  let awayGoals = 0;
+
+  scorers.forEach((goal) => {
+    if (idsEqual(goal.teamId, simulation?.homeTeam?.id)) homeGoals += 1;
+    if (idsEqual(goal.teamId, simulation?.awayTeam?.id)) awayGoals += 1;
+  });
+
+  return {
+    homeGoals,
+    awayGoals,
+    scorers,
+  };
+}
