@@ -4,12 +4,17 @@
  * Muestra zonas de clasificación continental, playoff y descenso.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Modal from '../../components/Modal/Modal';
 import { buildStandingsTable, getLocalDivisionTeams } from '../../utils/matchSimulation';
 import { buildLeagueCatalog } from '../../utils/leagueCatalog';
 import { getActiveParticipant } from '../../utils/saveState';
 import './StandingsModal.css';
+
+// Referencia estable para no invalidar los useMemo de abajo cuando el save
+// no trae config/localSchedule (evita que `?? []` cree un array nuevo en
+// cada render, lo que rompería la comparación de dependencias de useMemo).
+const EMPTY_ARRAY = [];
 
 /**
  * Devuelve la zona de clasificación para una posición en una división dada.
@@ -52,7 +57,10 @@ const ZONE_COLORS = {
 };
 
 function DivisionTable({ division }) {
-  const rows = buildStandingsTable(division.teams ?? [], []);
+  const rows = useMemo(
+    () => buildStandingsTable(division.teams ?? EMPTY_ARRAY, EMPTY_ARRAY),
+    [division.teams]
+  );
 
   return <RowsTable division={division} rows={rows} />;
 }
@@ -119,8 +127,15 @@ function RowsTable({ division, rows }) {
 }
 
 function DynamicLocalDivision({ save, division }) {
-  const teams = getLocalDivisionTeams(save);
-  const rows = buildStandingsTable(teams, save.localSchedule ?? []);
+  // getLocalDivisionTeams solo lee save.localSchedule internamente; se
+  // depende de ese campo puntual (no de `save`) a proposito, para no
+  // recalcular en cada render por el resto del save cambiando de referencia.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const teams = useMemo(() => getLocalDivisionTeams(save), [save.localSchedule]);
+  const rows = useMemo(
+    () => buildStandingsTable(teams, save.localSchedule ?? EMPTY_ARRAY),
+    [teams, save.localSchedule]
+  );
   if (!rows.length) {
     return <DivisionTable division={division} />;
   }
@@ -128,8 +143,11 @@ function DynamicLocalDivision({ save, division }) {
 }
 
 function StandingsModal({ isOpen, onClose, save }) {
-  const selectedLeagueIds = save.config?.selectedLeagues ?? [];
-  const leagues = buildLeagueCatalog(save.teamPool ?? [], selectedLeagueIds);
+  const selectedLeagueIds = save.config?.selectedLeagues ?? EMPTY_ARRAY;
+  const leagues = useMemo(
+    () => buildLeagueCatalog(save.teamPool ?? EMPTY_ARRAY, selectedLeagueIds),
+    [save.teamPool, selectedLeagueIds]
+  );
   const player = getActiveParticipant(save);
 
   const [activeLeagueId, setActiveLeagueId] = useState(
