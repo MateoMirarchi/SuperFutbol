@@ -1,0 +1,67 @@
+-- Migracion 002 (OPCIONAL / BORRADOR PARA REVISION -- NO EJECUTAR TAL CUAL)
+--
+-- Contexto: equipos.liga_id (varchar) y equipos.division (integer 1-4) no
+-- tienen ninguna FK real hoy -- son texto/entero sueltos. La auditoria pidio
+-- agregar FKs reales entre estas columnas y las tablas pais/division. Al
+-- investigar como se usan en el codigo (services/paisesService.js,
+-- controllers/equiposController.js, utils/serializers.js:toEquipoRow, y
+-- frontend/src/data/leagues.js) se encontro una dualidad que impide agregar
+-- la FK a ciegas:
+--
+--   - Las 6 ligas "de fabrica" (arg, bra, esp, ger, ita, fra) son un catalogo
+--     ESTATICO hardcodeado en el frontend (frontend/src/data/leagues.js) y en
+--     equipos.liga_id/liga_nombre -- estas 6 ligas NUNCA tienen una fila en
+--     la tabla `paises` (esa tabla es solo para paises creados por un admin
+--     via POST /paises).
+--   - controllers/equiposController.js:create llama paisesService.create()
+--     cuando el body trae countryName, pero el `liga_id` que efectivamente
+--     se guarda en el equipo (utils/serializers.js:toEquipoRow) es
+--     req.body.leagueId tal cual lo manda el cliente -- NUNCA el `id`
+--     (serial integer) del pais recien creado en Supabase. O sea: liga_id no
+--     es hoy, ni siquiera para paises custom, una referencia al id real de
+--     `paises`.
+--
+-- Agregar `equipos.liga_id references paises(id)` tal cual rompe cualquier
+-- equipo de las 6 ligas estaticas (no tienen fila en paises), y agregar
+-- `equipos.division references divisiones(id)` tampoco tiene sentido porque
+-- `division` es un nivel (1-4) compartido por TODOS los paises, no el id de
+-- una fila especifica de `divisiones` (que es por-pais).
+--
+-- Antes de aplicar cualquier variante de esta migracion hay que decidir:
+--   (a) Sembrar las 6 ligas estaticas como filas reales en `paises` (con un
+--       codigo corto tipo 'arg'/'bra' en vez de nombre completo), y migrar
+--       equiposController.js para que siempre use el id real devuelto por
+--       paisesService.create/findByNombre en vez de req.body.leagueId; o
+--   (b) Aceptar que liga_id es un identificador de catalogo (mezcla de
+--       estatico + dinamico) y no forzarlo a ser una FK de Postgres, dejando
+--       la integridad de esa relacion a cargo de la aplicacion.
+--
+-- Lo que sigue es un ESBOZO de la opcion (a) para cuando se tome esa
+-- decision -- requiere backfill de datos existentes y tocar
+-- equiposController.js/toEquipoRow, no es un simple ALTER TABLE.
+
+-- Paso 1 (aditivo, seguro): agregar codigo corto a paises para poder
+-- referenciarlo con el mismo estilo que liga_id (arg/bra/esp/...).
+-- alter table paises add column if not exists codigo varchar(10) unique;
+
+-- Paso 2: sembrar las 6 ligas estaticas como paises reales, una por una,
+-- ajustando el nombre real de cada una.
+-- insert into paises (nombre, codigo) values
+--   ('Argentina', 'arg'), ('Brasil', 'bra'), ('España', 'esp'),
+--   ('Alemania', 'ger'), ('Italia', 'ita'), ('Francia', 'fra')
+-- on conflict (codigo) do nothing;
+
+-- Paso 3: agregar la columna FK nueva sin borrar la vieja todavia (permite
+-- backfill sin downtime).
+-- alter table equipos add column if not exists pais_id integer references paises(id);
+-- update equipos e set pais_id = p.id from paises p where p.codigo = e.liga_id;
+
+-- Paso 4 (recien aca, y solo si el backfill del paso 3 cubrio el 100% de las
+-- filas): hacer pais_id not null y considerar dropear liga_id/liga_nombre,
+-- reemplazando toEquipoRow/fromEquipoRow para leer el nombre desde el join
+-- con paises en vez de la columna denormalizada.
+-- alter table equipos alter column pais_id set not null;
+
+-- La FK de `division` (equipos.division -> divisiones) requeriria el mismo
+-- tipo de columna nueva (division_id) mas backfill por (pais_id, nivel), no
+-- se esboza aca en detalle hasta resolver el punto anterior.
