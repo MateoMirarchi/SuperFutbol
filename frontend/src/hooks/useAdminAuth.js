@@ -5,27 +5,19 @@
 
 import { useEffect, useState } from 'react';
 import { loginRequest } from '../services/api';
+import { loadData, removeData, saveData } from '../utils/storage';
 
 const STORAGE_KEY = 'superfutbol_admin_session';
 
-function readStoredSession() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
-
 function useAdminAuth() {
-  const [session, setSession] = useState(() => readStoredSession());
+  const [session, setSession] = useState(() => loadData(STORAGE_KEY, null));
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (session) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+      saveData(STORAGE_KEY, session);
     } else {
-      localStorage.removeItem(STORAGE_KEY);
+      removeData(STORAGE_KEY);
     }
   }, [session]);
 

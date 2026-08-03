@@ -30,26 +30,24 @@
 
 import { useState, useCallback } from 'react';
 import { DB_KEY, seedDatabase } from '../utils/teamDbUtils';
+import { loadData, saveData } from '../utils/storage';
 
 // ── Helpers de persistencia ──────────────────────────────────────────────
 
 function loadDb() {
-  try {
-    const raw = localStorage.getItem(DB_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (parsed?.teams) return parsed; // datos v\u00E1lidos
-    }
-  } catch {
-    // JSON corrupto: recrear
-  }
+  const parsed = loadData(DB_KEY, null);
+  if (parsed?.teams) return parsed;
+
   const fresh = seedDatabase();
-  localStorage.setItem(DB_KEY, JSON.stringify(fresh));
+  saveData(DB_KEY, fresh);
   return fresh;
 }
 
 function persistDb(db) {
-  localStorage.setItem(DB_KEY, JSON.stringify(db));
+  // saveData atrapa errores de cuota/modo privado en vez de lanzar: antes este
+  // setItem no tenia try/catch y una cuota llena rompia cualquier alta/edicion
+  // de equipos o jugadores (commit() propagaba la excepcion sin capturarla).
+  saveData(DB_KEY, db);
 }
 
 // ── Hook ─────────────────────────────────────────────────────────────────
