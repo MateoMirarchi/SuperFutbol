@@ -20,6 +20,43 @@ export function defaultConfidence() {
 }
 
 /**
+ * Aplica el resultado de un partido a la confianza de una partida (save) y arma
+ * el patch listo para persistir. Es la única implementación de este cálculo:
+ * la usan tanto este hook como pages/Dashboard/MatchSimulationScreen.jsx, que
+ * necesita el patch para combinarlo con otros cambios antes de un único
+ * onUpdateSave/onApplySave.
+ *
+ * @param {object} save - Partida activa
+ * @param {'win'|'draw'|'loss'} result
+ * @param {'international'|'nationalCup'|'local'} competitionType
+ * @param {number} rivalPrestige - Prestigio del equipo rival (0-100)
+ * @param {{ board: number, fans: number }} currentConfidence
+ * @returns {Promise<{ confidence: object, players: object[], expulsado: boolean }>}
+ */
+export async function computeConfidencePatch({ save, result, competitionType, rivalPrestige, currentConfidence }) {
+  const myPrestige = getActiveParticipant(save)?.prestige ?? 70;
+  const response = await applyConfidenceResult({
+    confidence: currentConfidence,
+    result,
+    competitionType,
+    rivalPrestige,
+    myPrestige,
+  });
+
+  const confidence = response?.confidence ?? currentConfidence;
+  const expulsado = Boolean(response?.expulsado);
+  const activeParticipant = getActiveParticipant(save);
+
+  return {
+    confidence,
+    expulsado,
+    players: activeParticipant
+      ? updateParticipantCollection(save.players, activeParticipant.id, { expulsado })
+      : save.players,
+  };
+}
+
+/**
  * Hook de confianza.
  *
  * @param {object}   activeSave    - Partida activa
@@ -43,27 +80,20 @@ function useConfidence(activeSave, onUpdateSave) {
    * @returns {{ confidence: object, fired: boolean }}
    */
   async function applyMatchResult(result, competitionType, rivalPrestige) {
-    const myPrestige = getActiveParticipant(activeSave)?.prestige ?? 70;
-    const response = await applyConfidenceResult({
-      confidence,
+    const patch = await computeConfidencePatch({
+      save: activeSave,
       result,
       competitionType,
       rivalPrestige,
-      myPrestige,
+      currentConfidence: confidence,
     });
-
-    const updated = response?.confidence ?? confidence;
-    const expelled = Boolean(response?.expulsado);
-    const activeParticipant = getActiveParticipant(activeSave);
 
     onUpdateSave({
-      confidence: updated,
-      players: activeParticipant
-        ? updateParticipantCollection(activeSave.players, activeParticipant.id, { expulsado: expelled })
-        : activeSave.players,
+      confidence: patch.confidence,
+      players: patch.players,
     });
 
-    return { confidence: updated, fired: expelled, expulsado: expelled };
+    return { confidence: patch.confidence, fired: patch.expulsado, expulsado: patch.expulsado };
   }
 
   return {

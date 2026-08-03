@@ -10,8 +10,8 @@ import {
   summarizeSimulationAtMinute,
 } from '../../utils/liveMatchSimulation';
 import { buildEffectiveMatchRoster } from '../../utils/tacticalSetup';
-import { applyConfidenceResult, getEquipoDetalle, runSimulation } from '../../services/api';
-import { updateParticipantCollection } from '../../utils/saveState';
+import { getEquipoDetalle, runSimulation } from '../../services/api';
+import { computeConfidencePatch } from '../../hooks/useConfidence';
 import MatchPrepModal from './MatchPrepModal';
 import './MatchSimulationScreen.css';
 
@@ -319,23 +319,19 @@ function MatchSimulationScreen({ save, preparation, onApplySave, onExit }) {
             : Number(playerHistoryEntry.result.homeGoals ?? 0);
           const result = goalsFor > goalsAgainst ? 'win' : goalsFor < goalsAgainst ? 'loss' : 'draw';
 
-          const confidenceResponse = await applyConfidenceResult({
-            confidence: lockedSave.confidence,
+          const patch = await computeConfidencePatch({
+            save: lockedSave,
             result,
             competitionType: 'local',
             rivalPrestige: idsEqual(playerHistoryEntry.homeTeam?.id, player.teamId)
               ? playerHistoryEntry.awayTeam?.prestige
               : playerHistoryEntry.homeTeam?.prestige,
-            myPrestige: player.prestige ?? 70,
+            currentConfidence: lockedSave.confidence,
           });
 
           confidencePatch = {
-            confidence: confidenceResponse?.confidence ?? lockedSave.confidence,
-            players: updateParticipantCollection(
-              lockedSave.players,
-              player.id,
-              { expulsado: Boolean(confidenceResponse?.expulsado) }
-            ),
+            confidence: patch.confidence,
+            players: patch.players,
           };
         }
 
