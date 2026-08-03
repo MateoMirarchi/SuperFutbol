@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useEffect } from 'react';
+﻿import { useState, useRef, useEffect, useCallback } from 'react';
 import StandingsModal from './StandingsModal';
 import CalendarModal from './CalendarModal';
 import LoanModal from './LoanModal';
@@ -116,16 +116,18 @@ function Dashboard({ activeSave, onSave, onSettings, onExit, onMarket, onUpdateS
     onUpdateSave({ players });
   }
 
-  // Handlers de plantilla
-  function handlePlayerLeftClick(player) {
+  // Handlers de plantilla (useCallback: mantienen referencia estable para que
+  // PlayerList/PlayerRow, memoizados con React.memo, no se re-rendericen en
+  // cada render de Dashboard por estado no relacionado, p.ej. el toolbar)
+  const handlePlayerLeftClick = useCallback((player) => {
     setSelectedPlayer((prev) => (prev?.id === player.id ? null : player));
     setContextMenu(null);
-  }
+  }, []);
 
-  function handlePlayerRightClick(player, event) {
+  const handlePlayerRightClick = useCallback((player, event) => {
     setContextMenu({ player, x: event.clientX, y: event.clientY });
     setSelectedPlayer(null);
-  }
+  }, []);
 
   /** Vende un jugador: lo elimina de la plantilla y suma el precio al presupuesto. */
   async function handleSellConfirm(player, salePrice) {
